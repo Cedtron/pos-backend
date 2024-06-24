@@ -3,7 +3,7 @@ const db = require('../conn/db');
 // Create a new sales entry
 exports.createSalesEntry = (req, res) => {
     const { RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, Date } = req.body;
-    const sql = `INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, Date) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO sales_tb (RegNo,Name, Product, Unit, Quantity, StandardAmount, TotalAmount, Date) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     db.query(sql, [RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, Date], (err, result) => {
         if (err) {
             return res.status(500).send(err);

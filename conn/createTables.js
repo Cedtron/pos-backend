@@ -57,7 +57,7 @@ const createSignupTable = `CREATE TABLE IF NOT EXISTS signup_tb (
   id INT AUTO_INCREMENT PRIMARY KEY,
   RegNo VARCHAR(10) NOT NULL,
   Name VARCHAR(50) NOT NULL,
-  Username VARCHAR(50) NOT NULL,
+  Email VARCHAR(50) NOT NULL,
   Password VARCHAR(50) NOT NULL,
   Status VARCHAR(50) NOT NULL,
   Role VARCHAR(20) NOT NULL,
@@ -70,6 +70,10 @@ const createTimeTable = `CREATE TABLE IF NOT EXISTS time_tb (
   Username VARCHAR(50) NOT NULL,
   Time VARCHAR(50) NOT NULL
 )`;
+
+
+// Sample data for signup_tb
+const insertSampleSignupData = `INSERT INTO signup_tb (RegNo, Name, Username, Password, Status, Role, passhint, DOR) VALUES  ('R001', 'John Doe', 'johndoe@gmail.com', 'password123', 'active', 'admin', 'first pet name', '2024-06-24')`;
 
 // Function to create tables
 function createTables() {
@@ -106,9 +110,24 @@ function createTables() {
       console.log('Sales table created');
     });
 
-    connection.query(createSignupTable, (err) => {
+    // Check if signup table exists
+    connection.query('SHOW TABLES LIKE "signup_tb"', (err, result) => {
       if (err) throw err;
-      console.log('Signup table created');
+      if (result.length === 0) {
+        // Table does not exist, create it and insert sample data
+        connection.query(createSignupTable, (err) => {
+          if (err) throw err;
+          console.log('Signup table created');
+          
+          // Insert sample data
+          connection.query(insertSampleSignupData, (err) => {
+            if (err) throw err;
+            console.log('Sample data inserted into signup table');
+          });
+        });
+      } else {
+        console.log('Signup table already exists');
+      }
     });
 
     connection.query(createTimeTable, (err) => {
@@ -118,8 +137,6 @@ function createTables() {
 
     // Release the connection
     connection.release();
-       
-        callback(null);
   });
 }
 

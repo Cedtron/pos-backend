@@ -7,16 +7,16 @@ const JWT_SECRET = 'your_jwt_secret_key';
 
 // Login a user
 exports.loginUser = (req, res) => {
-    const { Username, Password } = req.body;
+    const { Email, Password } = req.body;
     
     // Fetch user from signup_tb
-    const sql = `SELECT * FROM signup_tb WHERE Username = ?`;
-    db.query(sql, [Username], (err, result) => {
+    const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
+    db.query(sql, [Email], (err, result) => {
         if (err) {
             return res.status(500).send(err);
         }
         if (result.length === 0) {
-            return res.status(401).send({ message: 'Invalid username or password' });
+            return res.status(401).send({ message: 'Invalid Email or password' });
         }
 
         const user = result[0];
@@ -27,15 +27,15 @@ exports.loginUser = (req, res) => {
                 return res.status(500).send(err);
             }
             if (!isMatch) {
-                return res.status(401).send({ message: 'Invalid username or password' });
+                return res.status(401).send({ message: 'Invalid Email or password' });
             }
 
             // Generate JWT token
-            const token = jwt.sign({ id: user.id, Username: user.Username }, JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ id: user.id, Email: user.Email }, JWT_SECRET, { expiresIn: '1h' });
 
             // Save login time in time_tb
-            const timeSql = `INSERT INTO time_tb (Username, Time) VALUES (?, NOW())`;
-            db.query(timeSql, [Username], (err) => {
+            const timeSql = `INSERT INTO time_tb (Email, Time) VALUES (?, NOW())`;
+            db.query(timeSql, [Email], (err) => {
                 if (err) {
                     return res.status(500).send(err);
                 }
