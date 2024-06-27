@@ -3,18 +3,18 @@ const router = express.Router();
 const signupController = require('./user');
 
 // Create a new signup entry
-router.post('/signups', signupController.createSignup);
+router.post('/signup', signupController.createSignup);
 
 // Read all signup entries
-router.get('/signups', signupController.getAllSignups);
+router.get('/users', signupController.getAllSignups);
 
 // Read a single signup entry by ID
-router.get('/signups/:id', signupController.getSignupById);
+router.get('/user/:id', signupController.getSignupById);
 
 // Update a signup entry by ID
-router.put('/signups/:id', signupController.updateSignup);
+router.put('/userupdate/:id', signupController.updateSignup);
 
 // Delete a signup entry by ID
-router.delete('/signups/:id', signupController.deleteSignup);
+router.delete('/deluser/:id', signupController.deleteSignup);
 
 module.exports = router;

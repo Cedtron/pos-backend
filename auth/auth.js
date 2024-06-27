@@ -53,7 +53,7 @@ exports.logoutUser = (req, res) => {
     res.clearCookie('token');
     res.status(200).send({ message: 'Logout successful' });
 };
-
+ 
 // Protected route example
 exports.protectedRoute = (req, res) => {
     res.status(200).send({ message: 'You have access to this protected route', user: req.user });

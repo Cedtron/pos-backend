@@ -2,9 +2,9 @@ const db = require('../conn/db');
 
 // Create a new time entry
 exports.createTimeEntry = (req, res) => {
-    const { Username, Time } = req.body;
-    const sql = `INSERT INTO time_tb (Username, Time) VALUES (?, ?)`;
-    db.query(sql, [Username, Time], (err, result) => {
+    const { Email, Time } = req.body;
+    const sql = `INSERT INTO time_tb (Email, Time) VALUES (?, ?)`;
+    db.query(sql, [Email, Time], (err, result) => {
         if (err) {
             return res.status(500).send(err);
         }
@@ -41,9 +41,9 @@ exports.getTimeEntryById = (req, res) => {
 // Update a time entry by ID
 exports.updateTimeEntry = (req, res) => {
     const { id } = req.params;
-    const { Username, Time } = req.body;
-    const sql = `UPDATE time_tb SET Username = ?, Time = ? WHERE id = ?`;
-    db.query(sql, [Username, Time, id], (err, result) => {
+    const { Email, Time } = req.body;
+    const sql = `UPDATE time_tb SET Email = ?, Time = ? WHERE id = ?`;
+    db.query(sql, [Email, Time, id], (err, result) => {
         if (err) {
             return res.status(500).send(err);
         }

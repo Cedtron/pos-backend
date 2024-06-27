@@ -67,13 +67,13 @@ const createSignupTable = `CREATE TABLE IF NOT EXISTS signup_tb (
 
 const createTimeTable = `CREATE TABLE IF NOT EXISTS time_tb (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  Username VARCHAR(50) NOT NULL,
+  Email VARCHAR(50) NOT NULL,
   Time VARCHAR(50) NOT NULL
 )`;
 
 
 // Sample data for signup_tb
-const insertSampleSignupData = `INSERT INTO signup_tb (RegNo, Name, Username, Password, Status, Role, passhint, DOR) VALUES  ('R001', 'John Doe', 'johndoe@gmail.com', 'password123', 'active', 'admin', 'first pet name', '2024-06-24')`;
+const insertSampleSignupData = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES  ('R001', 'John Doe', 'johndoe@gmail.com', 'password123', 'active', 'admin', 'first pet name', '2024-06-24')`;
 
 // Function to create tables
 function createTables() {
