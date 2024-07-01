@@ -3,7 +3,7 @@ const router = express.Router();
 const expenseController = require('./expend');
 
 // Create a new expense entry
-router.post('/expenses', expenseController.createExpenseEntry);
+router.post('/addexpenses', expenseController.createExpenseEntry);
 
 // Read all expense entries
 router.get('/expenses', expenseController.getAllExpenseEntries);
@@ -12,9 +12,9 @@ router.get('/expenses', expenseController.getAllExpenseEntries);
 router.get('/expenses/:id', expenseController.getExpenseEntryById);
 
 // Update an expense entry by ID
-router.put('/expenses/:id', expenseController.updateExpenseEntry);
+router.put('/updateexpenses/:id', expenseController.updateExpenseEntry);
 
 // Delete an expense entry by ID
-router.delete('/expenses/:id', expenseController.deleteExpenseEntry);
+router.delete('/delexpenses/:id', expenseController.deleteExpenseEntry);
 
 module.exports = router;

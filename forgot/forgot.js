@@ -4,28 +4,43 @@ const bcrypt = require('bcrypt');
 // Check if email exists
 exports.checkEmail = (req, res) => {
     const { email } = req.body;
-    const sql = `SELECT * FROM signup_tb WHERE Username = ?`;
-    db.query(sql, [email], (err, result) => {
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Query to check if the email exists in the database
+    const sql = `SELECT 1 FROM signup_tb WHERE Email = ? LIMIT 1`; // `LIMIT 1` improves performance
+
+    db.query(sql, [email], (err, results) => {
         if (err) {
+            console.error('Database error:', err);
             return res.status(500).json({ error: 'Internal Server Error' });
         }
-        if (result.length === 0) {
-            return res.status(404).json({ error: 'Email not found' });
+
+        // Check if any row was returned
+        if (results.length > 0) {
+            return res.json({ exists: true }); // Email found
+            console.log("Email found")
+        } else {
+           return res.json({ exists: false }); // Email not found
+            console.log("Email not found")
         }
-        res.json({ exists: true });
     });
 };
 
 // Confirm passhint code
 exports.confirmCode = (req, res) => {
     const { email, code } = req.body;
-    const sql = `SELECT * FROM signup_tb WHERE Username = ?`;
+    const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
     db.query(sql, [email], async (err, result) => {
         if (err) {
             return res.status(500).json({ error: 'Internal Server Error' });
+            //console.log("Internal Server Error")
         }
         if (result.length === 0) {
             return res.status(404).json({ error: 'Email not found' });
+            // console.log("No email")
         }
 
         const user = result[0];
@@ -42,8 +57,8 @@ exports.confirmCode = (req, res) => {
 // Update password
 exports.updatePassword = (req, res) => {
     const { email, password } = req.body;
-    const sqlSelect = `SELECT * FROM signup_tb WHERE Username = ?`;
-    const sqlUpdate = `UPDATE signup_tb SET Password = ? WHERE Username = ?`;
+    const sqlSelect = `SELECT * FROM signup_tb WHERE Email = ?`;
+    const sqlUpdate = `UPDATE signup_tb SET Password = ? WHERE Email = ?`;
 
     db.query(sqlSelect, [email], async (err, result) => {
         if (err) {

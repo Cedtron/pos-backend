@@ -10,18 +10,34 @@ exports.createSignup = async (req, res) => {
     }
 
     try {
-        const hashedPassword = await bcrypt.hash(Password, 10);
-        const sql = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-        db.query(sql, [RegNo, Name, Email, hashedPassword, Status, Role, passhint, DOR], (err, result) => {
+        const emailCheckSql = 'SELECT Email FROM signup_tb WHERE Email = ?';
+        db.query(emailCheckSql, [Email], async (err, result) => {
             if (err) {
-                return res.status(500).send(err);
+                return res.status(500).send({ message: 'Database query error', error: err });
             }
-            res.status(201).send({ id: result.insertId });
+
+            if (result.length > 0) {
+                return res.status(400).send({ message: 'Email already exists' });
+            } else {
+                try {
+                    const hashedPassword = await bcrypt.hash(Password, 10);
+                    const insertSql = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+                    db.query(insertSql, [RegNo, Name, Email, hashedPassword, Status, Role, passhint, DOR], (err, result) => {
+                        if (err) {
+                            return res.status(500).send({ message: 'Database insertion error', error: err });
+                        }
+                        res.status(201).send({ id: result.insertId });
+                    });
+                } catch (hashError) {
+                    return res.status(500).send({ message: 'Password hashing error', error: hashError });
+                }
+            }
         });
     } catch (err) {
-        return res.status(500).send(err);
+        return res.status(500).send({ message: 'Unexpected server error', error: err });
     }
 };
+
 
 // Read all signup entries
 exports.getAllSignups = (req, res) => {

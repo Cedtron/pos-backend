@@ -75,7 +75,6 @@ const createTimeTable = `CREATE TABLE IF NOT EXISTS time_tb (
 // Sample data for signup_tb
 const insertSampleSignupData = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES  ('R001', 'John Doe', 'johndoe@gmail.com', 'password123', 'active', 'admin', 'first pet name', '2024-06-24')`;
 
-// Function to create tables
 function createTables() {
   // Get a connection from the pool
   pool.getConnection((err, connection) => {
@@ -84,55 +83,34 @@ function createTables() {
       return;
     }
 
-    // Execute each query
-    connection.query(createCategoryTable, (err) => {
-      if (err) throw err;
-      console.log('Category table created');
-    });
+    const tables = [
+      { name: 'category_tb', createQuery: createCategoryTable },
+      { name: 'expense_tb', createQuery: createExpenseTable },
+      { name: 'items_tb', createQuery: createItemsTable },
+      { name: 'products_tb', createQuery: createProductsTable },
+      { name: 'sales_tb', createQuery: createSalesTable },
+      { name: 'signup_tb', createQuery: createSignupTable },
+      { name: 'time_tb', createQuery: createTimeTable }
+    ];
 
-    connection.query(createExpenseTable, (err) => {
-      if (err) throw err;
-      console.log('Expense table created');
-    });
-
-    connection.query(createItemsTable, (err) => {
-      if (err) throw err;
-      console.log('Items table created');
-    });
-
-    connection.query(createProductsTable, (err) => {
-      if (err) throw err;
-      console.log('Products table created');
-    });
-
-    connection.query(createSalesTable, (err) => {
-      if (err) throw err;
-      console.log('Sales table created');
-    });
-
-    // Check if signup table exists
-    connection.query('SHOW TABLES LIKE "signup_tb"', (err, result) => {
-      if (err) throw err;
-      if (result.length === 0) {
-        // Table does not exist, create it and insert sample data
-        connection.query(createSignupTable, (err) => {
-          if (err) throw err;
-          console.log('Signup table created');
-          
-          // Insert sample data
-          connection.query(insertSampleSignupData, (err) => {
+    tables.forEach(table => {
+      connection.query(`SHOW TABLES LIKE '${table.name}'`, (err, result) => {
+        if (err) throw err;
+        if (result.length === 0) {
+          connection.query(table.createQuery, (err) => {
             if (err) throw err;
-            console.log('Sample data inserted into signup table');
+            console.log(`${table.name} table created`);
+            if (table.name === 'signup_tb') {
+              connection.query(insertSampleSignupData, (err) => {
+                if (err) throw err;
+                console.log('Sample data inserted into signup table');
+              });
+            }
           });
-        });
-      } else {
-        console.log('Signup table already exists');
-      }
-    });
-
-    connection.query(createTimeTable, (err) => {
-      if (err) throw err;
-      console.log('Time table created');
+        } else {
+         // console.log(`${table.name} table already exists`);
+        }
+      });
     });
 
     // Release the connection

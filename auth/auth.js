@@ -1,7 +1,7 @@
 const db = require('../conn/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
+ 
 // Secret key for JWT
 const JWT_SECRET = 'your_jwt_secret_key';
 
