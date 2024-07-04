@@ -10,21 +10,21 @@ exports.checkEmail = (req, res) => {
     }
 
     // Query to check if the email exists in the database
-    const sql = `SELECT 1 FROM signup_tb WHERE Email = ? LIMIT 1`; // `LIMIT 1` improves performance
+    const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
 
     db.query(sql, [email], (err, results) => {
         if (err) {
-            console.error('Database error:', err);
+            // console.error('Database error:', err);
             return res.status(500).json({ error: 'Internal Server Error' });
         }
 
         // Check if any row was returned
         if (results.length > 0) {
             return res.json({ exists: true }); // Email found
-            console.log("Email found")
+            // console.log("Email found")
         } else {
-           return res.json({ exists: false }); // Email not found
-            console.log("Email not found")
+            return res.json({ exists: false }); // Email not found
+            // console.log("Email not found")
         }
     });
 };
@@ -32,11 +32,16 @@ exports.checkEmail = (req, res) => {
 // Confirm passhint code
 exports.confirmCode = (req, res) => {
     const { email, code } = req.body;
+
+    if (!email || !code) {
+        return res.status(400).json({ error: 'Code are required' });
+    }
+
     const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
-    db.query(sql, [email], async (err, result) => {
+    db.query(sql, [email], (err, result) => {
         if (err) {
             return res.status(500).json({ error: 'Internal Server Error' });
-            //console.log("Internal Server Error")
+            // console.log("Internal Server Error")
         }
         if (result.length === 0) {
             return res.status(404).json({ error: 'Email not found' });
@@ -44,7 +49,7 @@ exports.confirmCode = (req, res) => {
         }
 
         const user = result[0];
-        const isMatch = await bcrypt.compare(code, user.passhint);
+        const isMatch = code === user.passhint;
 
         if (!isMatch) {
             return res.status(401).json({ error: 'Incorrect code' });

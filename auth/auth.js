@@ -3,12 +3,12 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
  
 // Secret key for JWT
-const JWT_SECRET = 'your_jwt_secret_key';
+const JWT_SECRET = 'boombaala';
 
 // Login a user
 exports.loginUser = (req, res) => {
     const { Email, Password } = req.body;
-    
+    console.log(Email)
     // Fetch user from signup_tb
     const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
     db.query(sql, [Email], (err, result) => {
@@ -27,7 +27,7 @@ exports.loginUser = (req, res) => {
                 return res.status(500).send(err);
             }
             if (!isMatch) {
-                return res.status(401).send({ message: 'Invalid Email or password' });
+                return res.status(401).send({ message: 'Invalid  password' });
             }
 
             // Generate JWT token
