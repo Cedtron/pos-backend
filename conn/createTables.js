@@ -58,7 +58,7 @@ const createSignupTable = `CREATE TABLE IF NOT EXISTS signup_tb (
   RegNo VARCHAR(10) NOT NULL,
   Name VARCHAR(50) NOT NULL,
   Email VARCHAR(50) NOT NULL,
-  Password VARCHAR(50) NOT NULL,
+  Password VARCHAR(250) NOT NULL,
   Status VARCHAR(50) NOT NULL,
   Role VARCHAR(20) NOT NULL,
   passhint VARCHAR(255),
@@ -73,7 +73,7 @@ const createTimeTable = `CREATE TABLE IF NOT EXISTS time_tb (
 
 
 // Sample data for signup_tb
-const insertSampleSignupData = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES  ('R001', 'John Doe', 'johndoe@gmail.com', 'password123', 'active', 'admin', 'first pet name', '2024-06-24')`;
+const insertSampleSignupData = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES  ('R001', 'John Doe', 'johndoe@gmail.com', 'password123', 'active', 'admin', 'dog', '2024-06-24')`;
 
 function createTables() {
   // Get a connection from the pool
@@ -108,7 +108,7 @@ function createTables() {
             }
           });
         } else {
-         // console.log(`${table.name} table already exists`);
+        // console.log(`${table.name} table already exists`);
         }
       });
     });

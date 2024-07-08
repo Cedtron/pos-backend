@@ -7,42 +7,58 @@ const JWT_SECRET = 'boombaala';
 
 // Login a user
 exports.loginUser = (req, res) => {
-    const { Email, Password } = req.body;
-    console.log(Email)
+    const { email, password } = req.body;
+
     // Fetch user from signup_tb
     const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
-    db.query(sql, [Email], (err, result) => {
+    db.query(sql, [email], (err, result) => {
         if (err) {
-            return res.status(500).send(err);
+            return res.status(500).send({ message: 'Internal Server Error', error: err });
         }
         if (result.length === 0) {
-            return res.status(401).send({ message: 'Invalid Email or password' });
+       
+            return res.status(401).send({ message: 'Invalid Email' });
         }
 
         const user = result[0];
 
         // Check password
-        bcrypt.compare(Password, user.Password, (err, isMatch) => {
+        bcrypt.compare(password, user.Password, (err, isMatch) => {
             if (err) {
-                return res.status(500).send(err);
+                console.error('Error comparing passwords:', err);
+                return res.status(500).send({ message: 'Internal Server Error', error: err });
             }
             if (!isMatch) {
-                return res.status(401).send({ message: 'Invalid  password' });
+                console.log('Password does not match');
+                return res.status(401).send({ message: 'Invalid password' });
             }
 
             // Generate JWT token
-            const token = jwt.sign({ id: user.id, Email: user.Email }, JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ id: user.id, email: user.Email }, JWT_SECRET, { expiresIn: '1h' });
+
+            // Get current time from the local machine
+            const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
             // Save login time in time_tb
-            const timeSql = `INSERT INTO time_tb (Email, Time) VALUES (?, NOW())`;
-            db.query(timeSql, [Email], (err) => {
+            const timeSql = `INSERT INTO time_tb (Email, Time) VALUES (?, ?)`;
+            db.query(timeSql, [email, currentTime], (err) => {
                 if (err) {
-                    return res.status(500).send(err);
+                    return res.status(500).send({ message: 'Internal Server Error', error: err });
                 }
 
-                // Set cookie with the token
-                res.cookie('token', token, { httpOnly: true });
-                res.status(200).send({ message: 'Login successful' });
+                // Send response with the token and user information
+                res.status(200).send({ 
+                    message: 'Login successful', 
+                    token,
+                    user: {
+                        id: user.id,
+                        regNo: user.RegNo,
+                        name: user.Name,
+                        email: user.Email,
+                        status: user.Status,
+                        role: user.Role
+                    }
+                });
             });
         });
     });
@@ -56,5 +72,5 @@ exports.logoutUser = (req, res) => {
  
 // Protected route example
 exports.protectedRoute = (req, res) => {
-    res.status(200).send({ message: 'You have access to this protected route', user: req.user });
+    res.status(200).send({ message: 'Token has been verified', user: req.user });
 };

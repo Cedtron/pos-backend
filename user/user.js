@@ -3,11 +3,12 @@ const bcrypt = require('bcrypt');
 
 // Create a new signup entry
 exports.createSignup = async (req, res) => {
-    const { RegNo, Name, Email, Password, confirmPassword, Status, Role, passhint, DOR } = req.body;
+    const { Name, Email, Password,  passhint} = req.body;
 
-    if (Password !== confirmPassword) {
-        return res.status(400).send({ message: 'Passwords do not match' });
-    }
+    const RegNo = 'RG001'; // Static value for RegNo
+    const Role = 'Saler'; // Static value for Role
+    const Status = 'active'; // Static value for Status
+    const localDate = new Date().toISOString().slice(0, 19).replace('T', ' '); // Local date in YYYY-MM-DD HH:MM:SS format
 
     try {
         const emailCheckSql = 'SELECT Email FROM signup_tb WHERE Email = ?';
@@ -22,18 +23,21 @@ exports.createSignup = async (req, res) => {
                 try {
                     const hashedPassword = await bcrypt.hash(Password, 10);
                     const insertSql = `INSERT INTO signup_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-                    db.query(insertSql, [RegNo, Name, Email, hashedPassword, Status, Role, passhint, DOR], (err, result) => {
+                    db.query(insertSql, [RegNo, Name, Email, hashedPassword, Status, Role, passhint, localDate], (err, result) => {
                         if (err) {
+                           
                             return res.status(500).send({ message: 'Database insertion error', error: err });
                         }
                         res.status(201).send({ id: result.insertId });
                     });
                 } catch (hashError) {
+                 
                     return res.status(500).send({ message: 'Password hashing error', error: hashError });
                 }
             }
         });
     } catch (err) {
+       
         return res.status(500).send({ message: 'Unexpected server error', error: err });
     }
 };
