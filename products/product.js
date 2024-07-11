@@ -2,13 +2,32 @@ const db = require('../conn/db');
 
 // Create a new product
 exports.createProduct = (req, res) => {
-    const { RegNo, title, description, brand, price, costprice, color, expdate, stock, rating, images, category_id, properties } = req.body;
-    const sql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, rating, images, category_id, properties) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    db.query(sql, [RegNo, title, description, brand, price, costprice, color, expdate, stock, rating, JSON.stringify(images), category_id, JSON.stringify(properties)], (err, result) => {
+    const RegNo = '001';
+    const { title, description, brand, price, costprice, color, expdate, stock, rating, images, category_id, properties } = req.body;
+
+    // SQL query to check if a product with the same title already exists
+    const checkTitleSql = `SELECT id FROM products_tb WHERE title = ?`;
+
+    db.query(checkTitleSql, [title], (err, result) => {
         if (err) {
             return res.status(500).send(err);
         }
-        res.status(201).send({ id: result.insertId });
+
+        if (result.length > 0) {
+            // Product with the same title already exists
+            return res.status(400).send({ message: 'Product already exists' });
+        }
+
+        // SQL query to insert the new product
+        const insertSql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, rating, images, category_id, properties) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, expdate, stock, rating, JSON.stringify(images), category_id, JSON.stringify(properties)], (err, result) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+
+            res.status(201).send({ id: result.insertId });
+        });
     });
 };
 
@@ -67,4 +86,22 @@ exports.deleteProduct = (req, res) => {
         }
         res.status(200).send({ message: 'Product deleted successfully' });
     });
+};
+
+
+exports.uploadImages = (req, res) => {
+    console.log(req.files); // Log the files to check if they are being received correctly
+
+    const files = req.files;
+    if (!files || files.length === 0) {
+        console.log('No files were uploaded.'); // Log this error for debugging
+        return res.status(400).json({ message: 'No files were uploaded.' });
+    }
+
+    const links = files.map(file => ({
+        filename: file.filename,
+        url: `/uploads/products/${file.filename}`
+    }));
+
+    res.status(200).json({ links });
 };

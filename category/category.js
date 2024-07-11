@@ -2,13 +2,28 @@ const db = require('../conn/db');
 
 // Create a new category
 exports.createCategory = (req, res) => {
-    const { RegNo, Name } = req.body;
-    const sql = `INSERT INTO category_tb (RegNo, Name) VALUES (?, ?)`;
-    db.query(sql, [RegNo, Name], (err, result) => {
+    const { category, subCategory } = req.body;
+
+    // Check if the category already exists
+    const checkSql = `SELECT * FROM category_tb WHERE category = ? AND sub_category = ?`;
+    db.query(checkSql, [category, subCategory], (err, results) => {
         if (err) {
             return res.status(500).send(err);
         }
-        res.status(201).send({ id: result.insertId });
+
+        // If the category already exists, return an error
+        if (results.length > 0) {
+            return res.status(400).send({ message: 'Category already exists' });
+        }
+
+        // Insert the new category
+        const insertSql = `INSERT INTO category_tb (category, sub_category) VALUES (?, ?)`;
+        db.query(insertSql, [category, subCategory], (err, result) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            res.status(201).send({ id: result.insertId });
+        });
     });
 };
 
@@ -41,16 +56,31 @@ exports.getCategoryById = (req, res) => {
 // Update a category by ID
 exports.updateCategory = (req, res) => {
     const { id } = req.params;
-    const { RegNo, Name } = req.body;
-    const sql = `UPDATE category_tb SET RegNo = ?, Name = ? WHERE id = ?`;
-    db.query(sql, [RegNo, Name, id], (err, result) => {
+    const { category, subCategory } = req.body;
+
+    // Check if the category already exists
+    const checkSql = `SELECT id FROM category_tb WHERE category = ? AND id != ?`;
+    db.query(checkSql, [category, id], (err, results) => {
         if (err) {
             return res.status(500).send(err);
         }
-        if (result.affectedRows === 0) {
-            return res.status(404).send({ message: 'Category not found' });
+
+        if (results.length > 0) {
+            // Category already exists
+            return res.status(400).send({ message: 'Category already exists' });
         }
-        res.status(200).send({ message: 'Category updated successfully' });
+
+        // Proceed with update
+        const updateSql = `UPDATE category_tb SET category = ?, sub_category = ? WHERE id = ?`;
+        db.query(updateSql, [category, subCategory, id], (err, result) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).send({ message: 'Category not found' });
+            }
+            res.status(200).send({ message: 'Category updated successfully' });
+        });
     });
 };
 

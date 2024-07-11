@@ -3,8 +3,8 @@ const pool = require('./db');
 // SQL queries to create tables
 const createCategoryTable = `CREATE TABLE IF NOT EXISTS category_tb (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  RegNo VARCHAR(50) NOT NULL,
-  Name VARCHAR(50) NOT NULL
+  category VARCHAR(50) NOT NULL,
+  sub_category VARCHAR(50) NOT NULL
 )`;
 
 const createExpenseTable = `CREATE TABLE IF NOT EXISTS expense_tb (
@@ -39,7 +39,7 @@ const createProductsTable = `CREATE TABLE IF NOT EXISTS products_tb (
   images JSON,
   category_id INT,
   properties JSON,
-  FOREIGN KEY (category_id) REFERENCES category_tb(id)
+  FOREIGN KEY (category) REFERENCES category_tb(id)
 )`;
 
 const createSalesTable = `CREATE TABLE IF NOT EXISTS sales_tb (
@@ -108,7 +108,7 @@ function createTables() {
             }
           });
         } else {
-        // console.log(`${table.name} table already exists`);
+        console.log(`${table.name} table already exists`);
         }
       });
     });
