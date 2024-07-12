@@ -7,6 +7,11 @@ const createCategoryTable = `CREATE TABLE IF NOT EXISTS category_tb (
   sub_category VARCHAR(50) NOT NULL
 )`;
 
+const ExpendCategoryTable = `CREATE TABLE IF NOT EXISTS Exp_category_tb (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL 
+)`;
+
 const createExpenseTable = `CREATE TABLE IF NOT EXISTS expense_tb (
   id INT AUTO_INCREMENT PRIMARY KEY,
   RegNo VARCHAR(20) NOT NULL,
@@ -37,9 +42,9 @@ const createProductsTable = `CREATE TABLE IF NOT EXISTS products_tb (
   stock INT NOT NULL,
   rating DECIMAL(3, 2),
   images JSON,
-  category_id INT,
-  properties JSON,
-  FOREIGN KEY (category) REFERENCES category_tb(id)
+  category VARCHAR(255) NOT NULL,
+  properties JSON
+ 
 )`;
 
 const createSalesTable = `CREATE TABLE IF NOT EXISTS sales_tb (
@@ -90,9 +95,10 @@ function createTables() {
       { name: 'products_tb', createQuery: createProductsTable },
       { name: 'sales_tb', createQuery: createSalesTable },
       { name: 'signup_tb', createQuery: createSignupTable },
-      { name: 'time_tb', createQuery: createTimeTable }
+      { name: 'time_tb', createQuery: createTimeTable },
+      { name: 'ExpendCategory_tb', createQuery:  ExpendCategoryTable }
     ];
-
+   
     tables.forEach(table => {
       connection.query(`SHOW TABLES LIKE '${table.name}'`, (err, result) => {
         if (err) throw err;
@@ -108,7 +114,7 @@ function createTables() {
             }
           });
         } else {
-        console.log(`${table.name} table already exists`);
+        //console.log(`${table.name} table already exists`);
         }
       });
     });

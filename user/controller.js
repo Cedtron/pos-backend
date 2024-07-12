@@ -11,6 +11,7 @@ router.get('/users', signupController.getAllSignups);
 // Read a single signup entry by ID
 router.get('/user/:id', signupController.getSignupById);
 
+
 // Update a signup entry by ID
 router.put('/userupdate/:id', signupController.updateSignup);
 

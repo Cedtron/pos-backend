@@ -11,6 +11,7 @@ const salesRoutes = require('./sales/controller');
 const expenseRoutes = require('./expenditure/controller');
 const itemRoutes = require('./items/controller');
 const categoryRoutes = require('./category/controller');
+const expendRoutes = require('./expense_cate/controller');
 // Import more route files as needed...
 const pool = require('./conn/db');
 const createTables = require('./conn/createTables');
@@ -36,6 +37,7 @@ app.use('/api', expenseRoutes);
 app.use('/api', itemRoutes);
 app.use('/api', authRoutes);
 app.use('/api', forgotRoutes);
+app.use('/api', expendRoutes);
 // Mount more routes as needed...
 
 // Basic route
