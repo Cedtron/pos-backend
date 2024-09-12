@@ -1,35 +1,43 @@
 const db = require('../conn/db');
-
+const generateRegNo = require('../conn/reg');
 // Create a new category
-exports.createCategory = (req, res) => {
-    const { category, subCategory } = req.body;
 
-    // Check if the category already exists
-    const checkSql = `SELECT * FROM category_tb WHERE category = ? AND sub_category = ?`;
-    db.query(checkSql, [category, subCategory], (err, results) => {
-        if (err) {
-            return res.status(500).send(err);
-        }
+exports.createCategory = async (req, res) => {
+    const { category, subCategory , shop_code} = req.body;
 
-        // If the category already exists, return an error
-        if (results.length > 0) {
-            return res.status(400).send({ message: 'Category already exists' });
-        }
-
-        // Insert the new category
-        const insertSql = `INSERT INTO category_tb (category, sub_category) VALUES (?, ?)`;
-        db.query(insertSql, [category, subCategory], (err, result) => {
+    try {
+        // Check if the category already exists
+        const checkSql = `SELECT * FROM category_tb WHERE category = ? AND sub_category = ?`;
+        db.query(checkSql, [category, subCategory], async (err, results) => {
             if (err) {
                 return res.status(500).send(err);
             }
-            res.status(201).send({ id: result.insertId });
+ 
+            // If the category already exists, return an error
+            if (results.length > 0) {
+                return res.status(400).send({ message: 'Category already exists' });
+            }
+ 
+            // Generate a new RegNo for the category
+            const regNo = await generateRegNo('C','category_tb');
+
+            // Insert the new category with the generated RegNo
+            const insertSql = `INSERT INTO category_tb (RegNo, category, sub_category, shop_code) VALUES (?, ?, ?, ?)`;
+            db.query(insertSql, [regNo, category, subCategory, shop_code], (err, result) => {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+                res.status(201).send({ id: result.insertId });
+            });
         });
-    });
+    } catch (err) {
+        return res.status(500).send({ message: 'Server error', error: err });
+    }
 };
 
 // Read all categories
 exports.getAllCategories = (req, res) => {
-    const sql = `SELECT * FROM category_tb`;
+    const sql = `SELECT * FROM category_tb ORDER BY id DESC`;
     db.query(sql, (err, results) => {
         if (err) {
             return res.status(500).send(err);

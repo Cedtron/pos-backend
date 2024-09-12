@@ -1,12 +1,12 @@
 const db = require('../conn/db');
-
+const generateRegNo = require('../conn/reg');
 // Create a new category
-exports.createCategory = (req, res) => {
-  const { name } = req.body;
+exports.createCategory = async (req, res) => {
+  const { name , shop_code} = req.body;
 
   // Check if the category already exists
-  const checkQuery = 'SELECT * FROM Exp_category_tb WHERE name = ?';
-  db.query(checkQuery, [name], (err, results) => {
+  const checkQuery = 'SELECT * FROM expendcategory_tb WHERE name = ?';
+  db.query(checkQuery, [name], async (err, results) => {
     if (err) {
       return res.status(500).json({ message: 'Database error', error: err.message });
     }
@@ -15,20 +15,28 @@ exports.createCategory = (req, res) => {
       return res.status(400).json({ message: 'Category already exists' });
     }
 
-    // Insert the new category
-    const insertQuery = 'INSERT INTO Exp_category_tb (name) VALUES (?)';
-    db.query(insertQuery, [name], (err, results) => {
-      if (err) {
-        return res.status(500).json({ message: 'Database error', error: err.message });
-      }
-      res.status(201).json({ message: 'Category created successfully', id: results.insertId, name });
-    });
+    try {
+      // Generate a new RegNo for the category entry
+      const RegNo = await generateRegNo('C','expendcategory_tb');
+
+      // Insert the new category
+      const insertQuery = 'INSERT INTO expendcategory_tb (RegNo, name, shop_code) VALUES (?, ?, ?)';
+      db.query(insertQuery, [RegNo, name, shop_code], (err, results) => {
+        if (err) {
+          return res.status(500).json({ message: 'Database error', error: err.message });
+        }
+        res.status(201).json({ message: 'Category created successfully', id: results.insertId, name, RegNo });
+      });
+    } catch (err) {
+      console.error("Error generating RegNo:", err);
+      return res.status(500).json({ message: 'Error generating RegNo' });
+    }
   });
 };
 
 // Get all categories
 exports.getAllCategories = (req, res) => {
-  const query = 'SELECT * FROM Exp_category_tb';
+  const query = 'SELECT * FROM expendcategory_tb ORDER BY id DESC';
   db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({ message: 'Database error', error: err.message });
@@ -40,7 +48,7 @@ exports.getAllCategories = (req, res) => {
 // Get a single category by ID
 exports.getCategoryById = (req, res) => {
   const { id } = req.params;
-  const query = 'SELECT * FROM Exp_category_tb WHERE id = ?';
+  const query = 'SELECT * FROM expendcategory_tb WHERE id = ?';
   db.query(query, [id], (err, results) => {
     if (err) {
       return res.status(500).json({ message: 'Database error', error: err.message });
@@ -58,7 +66,7 @@ exports.updateCategoryById = (req, res) => {
   const { name } = req.body;
 
   // Check if the new name already exists
-  const checkQuery = 'SELECT * FROM Exp_category_tb WHERE name = ? AND id != ?';
+  const checkQuery = 'SELECT * FROM expendcategory_tb WHERE name = ? AND id != ?';
   db.query(checkQuery, [name, id], (err, results) => {
     if (err) {
       return res.status(500).json({ message: 'Database error', error: err.message });
@@ -69,7 +77,7 @@ exports.updateCategoryById = (req, res) => {
     }
 
     // Update the category
-    const updateQuery = 'UPDATE Exp_category_tb SET name = ? WHERE id = ?';
+    const updateQuery = 'UPDATE expendcategory_tb SET name = ? WHERE id = ?';
     db.query(updateQuery, [name, id], (err, results) => {
       if (err) {
         return res.status(500).json({ message: 'Database error', error: err.message });
@@ -85,7 +93,7 @@ exports.updateCategoryById = (req, res) => {
 // Delete a category by ID
 exports.deleteCategoryById = (req, res) => {
   const { id } = req.params;
-  const query = 'DELETE FROM Exp_category_tb WHERE id = ?';
+  const query = 'DELETE FROM expendcategory_tb WHERE id = ?';
   db.query(query, [id], (err, results) => {
     if (err) {
       return res.status(500).json({ message: 'Database error', error: err.message });

@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const timeController = require('./activity');
+const logsController = require('./activity'); // Adjust the path as needed
 
-// Create a new time entry
-router.post('/addtimes', timeController.createTimeEntry);
+// Create a new log entry
+router.post('/logs', logsController.createLog);
 
-// Read all time entries
-router.get('/times', timeController.getAllTimeEntries);
+// Read all log entries
+router.get('/logs', logsController.getAllLogs);
 
-// Read a single time entry by ID
-router.get('/times/:id', timeController.getTimeEntryById);
+// Read a single log entry by ID
+router.get('/logs/:id', logsController.getLogById);
 
-// Update a time entry by ID
-router.put('/updatetimes/:id', timeController.updateTimeEntry);
+// Update a log entry by ID
+router.put('/logs/:id', logsController.updateLog);
 
-// Delete a time entry by ID
-router.delete('/deltimes/:id', timeController.deleteTimeEntry);
+// Delete a log entry by ID
+router.delete('/logs/:id', logsController.deleteLog);
 
 module.exports = router;

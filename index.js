@@ -6,16 +6,26 @@ const configureEnvironment = require('./conn/config');
 const productRoutes = require('./products/controller');
 const signupRoutes = require('./user/controller');
 const forgotRoutes = require('./forgot/controller');
-const timeRoutes = require('./activity/controller');
+const logRoutes = require('./activity/controller');
 const salesRoutes = require('./sales/controller');
-const expenseRoutes = require('./expenditure/controller');
-const itemRoutes = require('./items/controller');
+const expenseRoutes = require('./expense_cate/controller');
+const expendRoutes = require('./expenditure/controller');
 const categoryRoutes = require('./category/controller');
-const expendRoutes = require('./expense_cate/controller');
+const categoriesRoutes = require('./categories/controller');
+const customerRoutes = require('./customer/controller');
+const orderRoutes = require('./order/controller');
+const shopRoutes = require('./shop/controller');
+const stockRoutes = require('./stock/controller');
+const supplierRoutes = require('./supplier/controller');
+const unitRoutes = require('./unit/controller');
 // Import more route files as needed...
 const pool = require('./conn/db');
 const createTables = require('./conn/createTables');
 
+
+
+
+// end
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -31,13 +41,19 @@ createTables();
 app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api', signupRoutes);
-app.use('/api', timeRoutes);
+app.use('/api', logRoutes);
 app.use('/api', salesRoutes);
 app.use('/api', expenseRoutes);
-app.use('/api', itemRoutes);
 app.use('/api', authRoutes);
 app.use('/api', forgotRoutes);
 app.use('/api', expendRoutes);
+app.use('/api', categoriesRoutes);
+app.use('/api', customerRoutes);
+app.use('/api', orderRoutes);
+app.use('/api', shopRoutes);
+app.use('/api', stockRoutes);
+app.use('/api', supplierRoutes);
+app.use('/api', unitRoutes);
 // Mount more routes as needed...
 
 // Basic route

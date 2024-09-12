@@ -1,6 +1,6 @@
 const db = require('../conn/db');
 const bcrypt = require('bcrypt');
-
+const generateRegNo = require('../conn/reg');
 // Check if email exists
 exports.checkEmail = (req, res) => {
     const { email } = req.body;
@@ -10,7 +10,7 @@ exports.checkEmail = (req, res) => {
     }
 
     // Query to check if the email exists in the database
-    const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
+    const sql = `SELECT * FROM users_tb WHERE Email = ?`;
 
     db.query(sql, [email], (err, results) => {
         if (err) {
@@ -37,7 +37,7 @@ exports.confirmCode = (req, res) => {
         return res.status(400).json({ error: 'Code are required' });
     }
 
-    const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
+    const sql = `SELECT * FROM users_tb WHERE Email = ?`;
     db.query(sql, [email], (err, result) => {
         if (err) {
             return res.status(500).json({ error: 'Internal Server Error' });
@@ -62,8 +62,8 @@ exports.confirmCode = (req, res) => {
 // Update password
 exports.updatePassword = (req, res) => {
     const { email, password } = req.body;
-    const sqlSelect = `SELECT * FROM signup_tb WHERE Email = ?`;
-    const sqlUpdate = `UPDATE signup_tb SET Password = ? WHERE Email = ?`;
+    const sqlSelect = `SELECT * FROM users_tb WHERE Email = ?`;
+    const sqlUpdate = `UPDATE users_tb SET Password = ? WHERE Email = ?`;
 
     db.query(sqlSelect, [email], async (err, result) => {
         if (err) {

@@ -1,32 +1,39 @@
 const db = require('../conn/db');
+const generateRegNo = require('../conn/reg');
+// Create a new expense entry
 
-// Create a new expense entry
-// Create a new expense entry
-exports.createExpenseEntry = (req, res) => {
-    const RegNo = "001"; // Assuming a static RegNo, adjust as needed
-    const { expcategory, amount, date, description } = req.body;
+exports.createExpenseEntry = async (req, res) => {
+    const { expcategory, amount, date, description, shop_code } = req.body;
 
     // Validate input
     if (!expcategory || !amount || !date || !description) {
         return res.status(400).send({ message: 'All fields are required' });
     }
 
-    // Map expcategory to Reason
-    const Reason = expcategory;
+    try {
+        // Generate a new RegNo for the expense entry
+        const RegNo = await generateRegNo('E','expense_tb');
 
-    const sql = `INSERT INTO expense_tb (RegNo, Reason, Amount, Date, Description) VALUES (?, ?, ?, ?, ?)`;
-    db.query(sql, [RegNo, Reason, amount, date, description], (err, result) => {
-        if (err) {
-            console.error("Error inserting expense:", err);
-            return res.status(500).send({ message: 'Error creating expense entry' });
-        }
-        res.status(201).send({ message: 'Expense entry created successfully', id: result.insertId });
-    });
+        // Map expcategory to Reason
+        const Reason = expcategory;
+
+        const sql = `INSERT INTO expense_tb (RegNo, Reason, Amount, Date, Description, shop_code) VALUES (?, ?, ?, ?, ?, ?)`;
+        db.query(sql, [RegNo, Reason, amount, date, description, shop_code], (err, result) => {
+            if (err) {
+                console.error("Error inserting expense:", err);
+                return res.status(500).send({ message: 'Error creating expense entry' });
+            }
+            res.status(201).send({ message: 'Expense entry created successfully', id: result.insertId });
+        });
+    } catch (err) {
+        console.error("Error generating RegNo:", err);
+        return res.status(500).send({ message: 'Error generating RegNo' });
+    }
 };
 
 // Read all expense entries
 exports.getAllExpenseEntries = (req, res) => {
-    const sql = `SELECT * FROM expense_tb`;
+    const sql = `SELECT * FROM expense_tb ORDER BY id DESC`;
     db.query(sql, (err, results) => {
         if (err) {
           

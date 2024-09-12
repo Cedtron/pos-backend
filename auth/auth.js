@@ -1,33 +1,29 @@
 const db = require('../conn/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
- 
+const generateRegNo = require('../conn/reg'); 
 // Secret key for JWT
 const JWT_SECRET = 'boombaala';
 
 // Login a user
-exports.loginUser = (req, res) => {
+exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
-    // Fetch user from signup_tb
-    const sql = `SELECT * FROM signup_tb WHERE Email = ?`;
-    db.query(sql, [email], (err, result) => {
-        if (err) {
-            return res.status(500).send({ message: 'Internal Server Error', error: err });
-        }
-        if (result.length === 0) {
-       
-            return res.status(401).send({ message: 'Invalid Email' });
-        }
-
-        const user = result[0];
-
-        // Check password
-        bcrypt.compare(password, user.Password, (err, isMatch) => {
+    try {
+        // Fetch user from users_tb
+        const sql = `SELECT * FROM users_tb WHERE Email = ?`;
+        db.query(sql, [email], async (err, result) => {
             if (err) {
-                console.error('Error comparing passwords:', err);
                 return res.status(500).send({ message: 'Internal Server Error', error: err });
             }
+            if (result.length === 0) {
+                return res.status(401).send({ message: 'Invalid Email' });
+            }
+
+            const user = result[0];
+
+            // Check password
+            const isMatch = await bcrypt.compare(password, user.Password);
             if (!isMatch) {
                 console.log('Password does not match');
                 return res.status(401).send({ message: 'Invalid password' });
@@ -36,19 +32,34 @@ exports.loginUser = (req, res) => {
             // Generate JWT token
             const token = jwt.sign({ id: user.id, email: user.Email }, JWT_SECRET, { expiresIn: '1h' });
 
+            // Generate a new RegNo for the log entry
+            const logRegNo = await generateRegNo('L', 'logs_tb');
+
             // Get current time from the local machine
             const currentTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
-            // Save login time in time_tb
-            const timeSql = `INSERT INTO time_tb (Email, Time) VALUES (?, ?)`;
-            db.query(timeSql, [email, currentTime], (err) => {
+            // Insert log entry into logs_tb
+            const logSql = `INSERT INTO logs_tb (RegNo, username, action, log_date, shop_code) VALUES (?, ?, ?, ?, ?)`;
+            db.query(logSql, [logRegNo, user.Name, 'User login', currentTime, user.shop_code], (err) => {
                 if (err) {
+                    console.error('Error inserting log entry:', err);
+                }
+            });
+
+            // Fetch currency based on user's shop_code
+            const currencySql = `SELECT currency FROM companydetails_tb WHERE shop_code = ?`;
+            db.query(currencySql, [user.shop_code], (err, currencyResult) => {
+                if (err) {
+                    console.error('Error fetching currency:', err);
                     return res.status(500).send({ message: 'Internal Server Error', error: err });
                 }
 
-                // Send response with the token and user information
-                res.status(200).send({ 
-                    message: 'Login successful', 
+                // Default currency to null if not found
+                const currency = currencyResult.length > 0 ? currencyResult[0].currency : null;
+
+                // Send response with the token, user information, and currency
+                res.status(200).send({
+                    message: 'Login successful',
                     token,
                     user: {
                         id: user.id,
@@ -56,12 +67,17 @@ exports.loginUser = (req, res) => {
                         name: user.Name,
                         email: user.Email,
                         status: user.Status,
-                        role: user.Role
+                        shop: user.shop_code,
+                        role: user.Role,
+                        currency // Include the currency in the user object
                     }
                 });
             });
         });
-    });
+    } catch (err) {
+        console.error('Error during login:', err);
+        res.status(500).send({ message: 'Internal Server Error', error: err });
+    }
 };
 
 // Logout a user

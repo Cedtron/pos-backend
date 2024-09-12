@@ -9,7 +9,7 @@ router.post('/signup', signupController.createSignup);
 router.get('/users', signupController.getAllSignups);
 
 // Read a single signup entry by ID
-router.get('/user/:id', signupController.getSignupById);
+router.get('/users/:id', signupController.getSignupById);
 
 
 // Update a signup entry by ID

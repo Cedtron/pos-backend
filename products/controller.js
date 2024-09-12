@@ -13,8 +13,9 @@ router.get('/products', productController.getAllProducts);
 router.get('/products/:id', productController.getProductById);
 
 // Update a product by ID
-router.put('/productsupdate/:id', productController.updateProduct);
+router.put('/productsupdate/:id', productController.updateProducts);
 
+router.put('/update-product/:RegNo', productController.updateProduct);
 // Delete a product by ID
 router.delete('/delproducts/:id', productController.deleteProduct);
 
