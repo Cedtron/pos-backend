@@ -99,16 +99,62 @@ exports.updateSignup = async (req, res) => {
     const { id } = req.params;
     const { RegNo, Name, Email, Password, confirmPassword, Status, Role, passhint, DOR } = req.body;
 
-    if (Password !== confirmPassword) {
+    // Check if passwords match only if Password is provided
+    if (Password && Password !== confirmPassword) {
         return res.status(400).send({ message: 'Passwords do not match' });
     }
 
     try {
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(Password, saltRounds);
+        let updates = [];
+        let values = [];
 
-        const sql = `UPDATE users_tb SET RegNo = ?, Name = ?, Email = ?, Password = ?, Status = ?, Role = ?, passhint = ?, DOR = ? WHERE id = ?`;
-        db.query(sql, [RegNo, Name, Email, hashedPassword, Status, Role, passhint, DOR, id], (err, result) => {
+        // Check if each field is present and prepare the update statement accordingly
+        if (RegNo) {
+            updates.push('RegNo = ?');
+            values.push(RegNo);
+        }
+        if (Name) {
+            updates.push('Name = ?');
+            values.push(Name);
+        }
+        if (Email) {
+            updates.push('Email = ?');
+            values.push(Email);
+        }
+        if (Password) {
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(Password, saltRounds);
+            updates.push('Password = ?');
+            values.push(hashedPassword);
+        }
+        if (Status) {
+            updates.push('Status = ?');
+            values.push(Status);
+        }
+        if (Role) {
+            updates.push('Role = ?');
+            values.push(Role);
+        }
+        if (passhint) {
+            updates.push('passhint = ?');
+            values.push(passhint);
+        }
+        if (DOR) {
+            updates.push('DOR = ?');
+            values.push(DOR);
+        }
+
+        // If no updates were made, return a 400 response
+        if (updates.length === 0) {
+            return res.status(400).send({ message: 'No fields to update' });
+        }
+
+        // Construct the SQL query
+        const sql = `UPDATE users_tb SET ${updates.join(', ')} WHERE id = ?`;
+        values.push(id); // Add id to the values
+
+        // Execute the update query
+        db.query(sql, values, (err, result) => {
             if (err) {
                 return res.status(500).send(err);
             }
