@@ -85,7 +85,9 @@ pool.getConnection((err, connection) => {
     connection.release(); // Release connection back to the pool
   }
 });
-
+app.get('/', (req, res) => {
+  res.send('POS Backend running on Vercel');
+});
 // Start server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
