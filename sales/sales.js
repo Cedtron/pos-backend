@@ -4,7 +4,7 @@ const generateRegNo = require('../conn/reg');
 
 // Create a new sales entry
 exports.createSalesEntry = async (req, res) => {
-    const { Products, shop_code, user } = req.body;
+    const { Products, shop_code, user ,grandTotal } = req.body;
 
     if (!Products || !shop_code || !user) {
         return res.status(400).json({ message: 'Required fields are missing' });
@@ -43,7 +43,7 @@ exports.createSalesEntry = async (req, res) => {
             totalUnits,
             totalQuantity,
             totalStandardAmount,
-            totalAmount,
+            grandTotal,
             new Date().toISOString(),
             user,
             shop_code

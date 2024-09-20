@@ -22,10 +22,6 @@ const unitRoutes = require('./unit/controller');
 const pool = require('./conn/db');
 const createTables = require('./conn/createTables');
 
-
-
-
-// end
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -34,6 +30,7 @@ configureEnvironment();
 
 // Setup middleware
 setupMiddleware(app);
+
 // Create tables on application startup
 createTables();
 
@@ -62,7 +59,6 @@ app.get('/', (req, res) => {
 });
 
 // Handle database errors
-
 pool.on('error', (err) => {
   console.error("Database error:", err);
   if (err.code === 'PROTOCOL_CONNECTION_LOST') {
@@ -76,6 +72,17 @@ pool.on('error', (err) => {
     });
   } else {
     throw err;
+  }
+});
+
+// Check database connection and log status
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error("Error connecting to the database:", err);
+    process.exit(1); // Exit if connection fails
+  } else {
+    console.log("Successfully connected to the online database"); // Log success message
+    connection.release(); // Release connection back to the pool
   }
 });
 
