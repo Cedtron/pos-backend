@@ -71,10 +71,73 @@ exports.updateProducts = async (req, res) => {
     const { id } = req.params;
     const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code } = req.body;
 
-    // SQL query to update the product details
-    const updateSql = `UPDATE products_tb SET title = ?, description = ?, brand = ?, price = ?, costprice = ?, color = ?, expdate = ?, stock = ?,unit = ?, images = ?, category = ?, sub_category = ? WHERE id = ? AND shop_code = ?`;
+    // Create an array to store the fields to update
+    let fieldsToUpdate = [];
+    let values = [];
 
-    db.query(updateSql, [title, description, brand, price, costprice, color, expdate, stock,unit, JSON.stringify(images), category, subCategory, id, shop_code], (err, result) => {
+    // Add only the fields that are not undefined or null
+    if (title !== undefined) {
+        fieldsToUpdate.push('title = ?');
+        values.push(title);
+    }
+    if (description !== undefined) {
+        fieldsToUpdate.push('description = ?');
+        values.push(description);
+    }
+    if (brand !== undefined) {
+        fieldsToUpdate.push('brand = ?');
+        values.push(brand);
+    }
+    if (price !== undefined) {
+        fieldsToUpdate.push('price = ?');
+        values.push(price);
+    }
+    if (costprice !== undefined) {
+        fieldsToUpdate.push('costprice = ?');
+        values.push(costprice);
+    }
+    if (color !== undefined) {
+        fieldsToUpdate.push('color = ?');
+        values.push(color);
+    }
+    if (expdate !== undefined) {
+        fieldsToUpdate.push('expdate = ?');
+        values.push(expdate);
+    }
+    if (stock !== undefined) {
+        fieldsToUpdate.push('stock = ?');
+        values.push(stock);
+    }
+    if (unit !== undefined) {
+        fieldsToUpdate.push('unit = ?');
+        values.push(unit);
+    }
+    if (images !== undefined) {
+        fieldsToUpdate.push('images = ?');
+        values.push(JSON.stringify(images));
+    }
+    if (category !== undefined) {
+        fieldsToUpdate.push('category = ?');
+        values.push(category);
+    }
+    if (subCategory !== undefined) {
+        fieldsToUpdate.push('sub_category = ?');
+        values.push(subCategory);
+    }
+
+    // If no fields are provided, send an error response
+    if (fieldsToUpdate.length === 0) {
+        return res.status(400).send({ message: 'No fields to update' });
+    }
+
+    // Add id and shop_code to the values array for the WHERE clause
+    values.push(id, shop_code);
+
+    // Build the SQL query dynamically
+    const updateSql = `UPDATE products_tb SET ${fieldsToUpdate.join(', ')} WHERE id = ? AND shop_code = ?`;
+
+    // Execute the query
+    db.query(updateSql, values, (err, result) => {
         if (err) {
             return res.status(500).send(err);
         }
