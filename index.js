@@ -23,7 +23,7 @@ const pool = require('./conn/db');
 const createTables = require('./conn/createTables');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 // Configure environment variables
 configureEnvironment();
