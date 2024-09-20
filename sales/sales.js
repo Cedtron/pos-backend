@@ -43,7 +43,7 @@ exports.createSalesEntry = async (req, res) => {
             totalUnits,
             totalQuantity,
             totalStandardAmount,
-            grandTotal,
+            totalAmount,
             new Date().toISOString(),
             user,
             shop_code
