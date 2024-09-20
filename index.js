@@ -53,11 +53,6 @@ app.use('/api', supplierRoutes);
 app.use('/api', unitRoutes);
 // Mount more routes as needed...
 
-// Basic route
-app.get('/', (req, res) => {
-  res.send('Hello, world!');
-});
-
 // Handle database errors
 pool.on('error', (err) => {
   console.error("Database error:", err);
@@ -85,9 +80,7 @@ pool.getConnection((err, connection) => {
     connection.release(); // Release connection back to the pool
   }
 });
-app.get('/', (req, res) => {
-  res.send('POS Backend running on Vercel');
-});
+
 // Start server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
