@@ -4,9 +4,9 @@ const generateRegNo = require('../conn/reg');
 
 // Create a new user entry
 exports.createSignup = async (req, res) => {
-    const { Name, Email, Password, passhint, Role, company_name } = req.body; // Include company_name
+    const { Name, Email, Password, passhint,Status, Role, company_name } = req.body; // Include company_name
 
-    const Status = 'active'; // Static value for Status
+    const Statu = Status || 'inactive';
     const localDate = new Date().toISOString().slice(0, 19).replace('T', ' '); // Local date in YYYY-MM-DD HH:MM:SS format
 
     try {
@@ -51,7 +51,7 @@ exports.createSignup = async (req, res) => {
 
                         // Step 3: Insert the new user with the retrieved shop_code
                         const insertSql = `INSERT INTO users_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR, shop_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                        db.query(insertSql, [RegNo, Name, Email, hashedPassword, Status, Role, passhint, localDate, shop_code], (err, result) => {
+                        db.query(insertSql, [RegNo, Name, Email, hashedPassword, Statu, Role, passhint, localDate, shop_code], (err, result) => {
                             if (err) {
                                 return res.status(500).send({ message: 'Database insertion error', error: err });
                             }
