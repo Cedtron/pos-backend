@@ -182,3 +182,24 @@ exports.deleteSignup = (req, res) => {
         res.status(200).send({ message: 'User deleted successfully' });
     });
 };
+
+
+exports.updateUserStatus = (req, res) => {
+    const { id } = req.params;
+    const { Status } = req.body; // Expect Status in the request body
+    
+    // SQL query to update only the Status field
+    const sql = `UPDATE users_tb SET Status = ? WHERE id = ?`;
+
+    db.query(sql, [Status, id], (err, result) => {
+        if (err) {
+            return res.status(500).send({ message: 'Error updating status', error: err });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        res.status(200).send({ message: 'Status updated successfully' });
+    });
+};

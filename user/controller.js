@@ -14,7 +14,7 @@ router.get('/users/:id', signupController.getSignupById);
 
 // Update a signup entry by ID
 router.put('/userupdate/:id', signupController.updateSignup);
-
+router.put('/userstatus/:id', signupController.updateUserStatus);
 // Delete a signup entry by ID
 router.delete('/deluser/:id', signupController.deleteSignup);
 
