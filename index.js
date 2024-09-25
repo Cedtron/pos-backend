@@ -18,6 +18,7 @@ const shopRoutes = require('./shop/controller');
 const stockRoutes = require('./stock/controller');
 const supplierRoutes = require('./supplier/controller');
 const unitRoutes = require('./unit/controller');
+const displayRoutes = require('./display/controller');
 // Import more route files as needed...
 const pool = require('./conn/db');
 const createTables = require('./conn/createTables');
@@ -51,6 +52,7 @@ app.use('/api', shopRoutes);
 app.use('/api', stockRoutes);
 app.use('/api', supplierRoutes);
 app.use('/api', unitRoutes);
+app.use('/api', displayRoutes);
 // Mount more routes as needed...
 
 // Handle database errors

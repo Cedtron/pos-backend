@@ -214,7 +214,7 @@ const createDisplayTable = `
     RegNo VARCHAR(50) NOT NULL,
     user VARCHAR(50) NOT NULL,
     nav VARCHAR(200) NOT NULL,
-    screen VARCHAR(200) NOT NULL,
+    screen VARCHAR(200),
     shop_code VARCHAR(50) NOT NULL,
     INDEX(shop_code)
   )
