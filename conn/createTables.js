@@ -136,6 +136,8 @@ const createSalesTable = `
     Quantity INT NOT NULL,
     StandardAmount DECIMAL(10, 2) NOT NULL,
     TotalAmount DECIMAL(10, 2) NOT NULL,
+    discount DECIMAL(10, 2) NOT NULL,
+     Taxes DECIMAL(10, 2) NOT NULL,
     Date DATE NOT NULL,
     user VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
@@ -206,6 +208,18 @@ CREATE TABLE regno_tracker (
     last_regno VARCHAR(10) NOT NULL
 );`
   
+const createDisplayTable = `
+  CREATE TABLE IF NOT EXISTS display_tb (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    RegNo VARCHAR(50) NOT NULL,
+    user VARCHAR(50) NOT NULL,
+    nav VARCHAR(200) NOT NULL,
+    screen VARCHAR(200) NOT NULL,
+    shop_code VARCHAR(50) NOT NULL,
+    INDEX(shop_code)
+  )
+`;
+
 const insertSampleSignupData = `
 INSERT INTO users_tb (RegNo, Name, Email, image, Password, Status, Role, passhint, DOR, shop_code) 
 VALUES ('R001', 'John Doe', 'johndoe@gmail.com', 'path/to/image.jpg', 'password123', 'active', 'admin', 'dog', '2024-06-24', 'SHOP001')
@@ -234,6 +248,7 @@ function createTables() {
         { name: 'suppliers_tb', createQuery: createSuppliersTable },
         { name: 'unit_tb', createQuery: createUnitTable },
         { name: 'users_tb', createQuery: createUsersTable },
+        { name: 'display_tb', createQuery: createDisplayTable },
         { name: 'regno_tracker', createQuery: createRegTracker }
       ];
 
