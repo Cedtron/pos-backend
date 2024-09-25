@@ -46,31 +46,51 @@ exports.loginUser = async (req, res) => {
                 }
             });
 
-            // Fetch currency based on user's shop_code
-            const currencySql = `SELECT currency FROM companydetails_tb WHERE shop_code = ?`;
-            db.query(currencySql, [user.shop_code], (err, currencyResult) => {
-                if (err) {
-                    console.error('Error fetching currency:', err);
-                    return res.status(500).send({ message: 'Internal Server Error', error: err });
-                }
+            // Assuming you already have the necessary imports and setup
 
-                // Default currency to null if not found
-                const currency = currencyResult.length > 0 ? currencyResult[0].currency : null;
+const currencySql = `SELECT currency FROM companydetails_tb WHERE shop_code = ?`;
+db.query(currencySql, [user.shop_code], (err, currencyResult) => {
+    if (err) {
+        console.error('Error fetching currency:', err);
+        return res.status(500).send({ message: 'Internal Server Error', error: err });
+    }
 
-                // Send response with the token, user information, and currency
-                res.status(200).send({
-                    message: 'Login successful',
-                    token,
-                    user: {
-                        id: user.id,
-                        regNo: user.RegNo,
-                        name: user.Name,
-                        email: user.Email,
-                        status: user.Status,
-                        shop: user.shop_code,
-                        role: user.Role,
-                        currency // Include the currency in the user object
-                    }
+    // Default currency to null if not found
+    const currency = currencyResult.length > 0 ? currencyResult[0].currency : null;
+
+    // Fetch screen and nav data from display table
+    const displaySql = `SELECT screen, nav FROM display_tb WHERE RegNo = ?`;
+    db.query(displaySql, [user.RegNo], (err, displayResult) => {
+        if (err) {
+            console.error('Error fetching display data:', err);
+            return res.status(500).send({ message: 'Internal Server Error', error: err });
+        }
+
+        // Prepare the display data
+        const displayData = displayResult.map(row => ({
+            screen: row.screen,
+            nav: row.nav
+        }));
+
+        // Send response with the token, user information, currency, and display data
+        res.status(200).send({
+            message: 'Login successful',
+            token,
+            user: {
+                id: user.id,
+                regNo: user.RegNo,
+                name: user.Name,
+                email: user.Email,
+                status: user.Status,
+                shop: user.shop_code,
+                role: user.Role,
+                currency, // Include the currency in the user object
+                display: displayData // Include display data
+            }
+        });
+ 
+
+           
                 });
             });
         });
