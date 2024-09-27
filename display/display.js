@@ -54,7 +54,7 @@ exports.getDisplayById = (req, res) => {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
 
-        console.log('Query results:', results); // Log the results of the query
+       
 
         if (results.length === 0) {
             return res.status(404).json({ message: 'Display entry not found' });
@@ -90,10 +90,10 @@ exports.updateDisplay = (req, res) => {
         values.push(screen);
     }
 
-    // Add the id to the values array for the WHERE clause
+    // Add the regno to the values array for the WHERE clause
     values.push(regno);
 
-    // Join the fields to form the SQL query
+    // Ensure that you're using the correct unique identifier in the WHERE clause
     const updateSql = `UPDATE display_tb SET ${updateFields.join(', ')} WHERE user = ?`;
 
     db.query(updateSql, values, (err, result) => {
