@@ -3,19 +3,23 @@ const generateRegNo = require('../conn/reg');
 
 // Create a new display entry
 exports.createDisplay = async (req, res) => {
-    const { user, nav, screen, shop_code } = req.body;
+    const { nav, shop_code } = req.body; // Get nav and shop_code from the request body
+    const screen = ''; // Set screen to blank as per your requirement
+    const user = req.body.RegNo; // Use RegNo from the frontend to align it as the 'user'
 
-    if (!user || !nav || !screen || !shop_code) {
-        return res.status(400).json({ message: 'User, nav, screen, and shop code are required' });
+    if (!user || !nav || !shop_code) {
+        return res.status(400).json({ message: 'User (RegNo), nav, and shop code are required' });
     }
 
     try {
-        // Generate RegNo
+        // Generate a unique RegNo for the display entry
         const RegNo = await generateRegNo('D', 'display_tb');
 
-        // Insert new display entry
+        // Prepare SQL for inserting the display entry
         const insertSql = `INSERT INTO display_tb (RegNo, user, nav, screen, shop_code) VALUES (?, ?, ?, ?, ?)`;
-        db.query(insertSql, [RegNo, user, nav, screen, shop_code], (err, result) => {
+
+        // Execute the query to insert the display entry into the database
+        db.query(insertSql, [RegNo, user, JSON.stringify(nav), screen, shop_code], (err, result) => {
             if (err) {
                 return res.status(500).json({ message: 'Error inserting display entry', error: err.message });
             }
@@ -39,9 +43,9 @@ exports.getDisplays = (req, res) => {
 
 // Get a single display entry by ID
 exports.getDisplayById = (req, res) => {
-    const { id } = req.params;
-    const selectSql = `SELECT * FROM display_tb WHERE id = ?`;
-    db.query(selectSql, [id], (err, results) => {
+    const { RegNo } = req.params;
+    const selectSql = `SELECT * FROM display_tb WHERE user = ?`;
+    db.query(selectSql, [RegNo], (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
