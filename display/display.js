@@ -91,10 +91,10 @@ exports.updateDisplay = (req, res) => {
     }
 
     // Add the id to the values array for the WHERE clause
-    values.push(id);
+    values.push(regno);
 
     // Join the fields to form the SQL query
-    const updateSql = `UPDATE display_tb SET ${updateFields.join(', ')} WHERE id = ?`;
+    const updateSql = `UPDATE display_tb SET ${updateFields.join(', ')} WHERE user = ?`;
 
     db.query(updateSql, values, (err, result) => {
         if (err) {
