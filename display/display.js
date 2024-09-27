@@ -65,7 +65,7 @@ exports.getDisplayById = (req, res) => {
 
 // Update a display entry by ID
 exports.updateDisplay = (req, res) => {
-    const { id } = req.params;
+    const { regno } = req.params; 
     const { user, nav, screen } = req.body;
 
     // Check if at least one field is provided
