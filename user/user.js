@@ -47,15 +47,44 @@ exports.createSignup = async (req, res) => {
 
                     try {
                         const hashedPassword = await bcrypt.hash(Password, 10);
-                        const RegNo = await generateRegNo('R', 'users_tb'); // Generate unique RegNo
-
-                        // Step 3: Insert the new user with the retrieved shop_code
-                        const insertSql = `INSERT INTO users_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR, shop_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-                        db.query(insertSql, [RegNo, Name, Email, hashedPassword, Statu, Role, passhint, localDate, shop_code], (err, result) => {
+                        const RegNo = await generateRegNo('R', 'users_tb'); // Generate unique RegNo for the user
+                    
+                        // Step 1: Insert the new user into users_tb
+                        const insertUserSql = `INSERT INTO users_tb (RegNo, Name, Email, Password, Status, Role, passhint, DOR, shop_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                        db.query(insertUserSql, [RegNo, Name, Email, hashedPassword, Statu, Role, passhint, localDate, shop_code], (err, userResult) => {
                             if (err) {
-                                return res.status(500).send({ message: 'Database insertion error', error: err });
+                                return res.status(500).send({ message: 'Database insertion error for user', error: err });
                             }
-                            res.status(201).send({ id: result.insertId });
+                    
+                            // Step 2: After successful user insertion, generate a unique RegNo for the display entry
+                            generateRegNo('D', 'display_tb').then(displayRegNo => {
+                                // Step 3: Insert into display_tb using the RegNo from the user entry as the user
+                                const navData = {
+                                    item1: 1,
+                                    item2: 2,
+                                    item3: 3,
+                                    item4: 0,
+                                    item5: 5,
+                                    item6: 6,
+                                    item7: 7,
+                                    item8: 0
+                                };
+                                const insertDisplaySql = `INSERT INTO display_tb (RegNo, user, nav, screen, shop_code) VALUES (?, ?, ?, ?, ?)`;
+                                db.query(insertDisplaySql, [displayRegNo, RegNo, JSON.stringify(navData), '', shop_code], (displayErr, displayResult) => {
+                                    if (displayErr) {
+                                        return res.status(500).json({ message: 'Error inserting display entry', error: displayErr.message });
+                                    }
+                    
+                                    // Step 4: Send success response for both insertions
+                                    res.status(201).json({
+                                        message: 'User and display entry created successfully',
+                                        userId: userResult.insertId,
+                                        displayId: displayResult.insertId
+                                    });
+                                });
+                            }).catch(regNoError => {
+                                return res.status(500).json({ message: 'Error generating RegNo for display', error: regNoError });
+                            });
                         });
                     } catch (hashError) {
                         return res.status(500).send({ message: 'Password hashing error', error: hashError });
