@@ -59,19 +59,21 @@ db.query(currencySql, [user.shop_code], (err, currencyResult) => {
     const currency = currencyResult.length > 0 ? currencyResult[0].currency : null;
 
     // Fetch screen and nav data from display table
-    const displaySql = `SELECT screen, nav FROM display_tb WHERE user = ?`;
+    const displaySql = `SELECT * FROM display_tb WHERE user = ?`;
     db.query(displaySql, [user.RegNo], (err, displayResult) => {
         if (err) {
             console.error('Error fetching display data:', err);
             return res.status(500).send({ message: 'Internal Server Error', error: err });
         }
-
+    
+        console.log(displayResult); // Check the data returned
+    
         // Prepare the display data
         const displayData = displayResult.map(row => ({
             screen: row.screen,
             nav: row.nav
         }));
-
+    
         // Send response with the token, user information, currency, and display data
         res.status(200).send({
             message: 'Login successful',
@@ -88,6 +90,7 @@ db.query(currencySql, [user.shop_code], (err, currencyResult) => {
                 display: displayData // Include display data
             }
         });
+ 
  
 
            
