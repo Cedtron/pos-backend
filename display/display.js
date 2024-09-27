@@ -43,12 +43,19 @@ exports.getDisplays = (req, res) => {
 
 // Get a single display entry by ID
 exports.getDisplayById = (req, res) => {
-    const { RegNo } = req.params;
+    const { regno } = req.params; // Ensure this matches your route parameter
     const selectSql = `SELECT * FROM display_tb WHERE user = ?`;
-    db.query(selectSql, [RegNo], (err, results) => {
+
+    console.log('Fetching display for RegNo:', regno); // Log the RegNo being searched
+
+    db.query(selectSql, [regno], (err, results) => {
         if (err) {
+            console.error('Database error:', err.message); // Log the error
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
+
+        console.log('Query results:', results); // Log the results of the query
+
         if (results.length === 0) {
             return res.status(404).json({ message: 'Display entry not found' });
         }
