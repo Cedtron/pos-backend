@@ -74,7 +74,7 @@ const user = regno
     }
 
     // First, retrieve the current nav value
-    const selectSql = `SELECT nav FROM display_tb WHERE regno = ?`;
+    const selectSql = `SELECT nav FROM display_tb WHERE user = ?`;
     db.query(selectSql, [regno], (selectErr, selectResult) => {
         if (selectErr) {
             return res.status(500).json({ message: 'Error retrieving display entry', error: selectErr.message });
