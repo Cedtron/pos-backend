@@ -66,8 +66,8 @@ exports.getDisplayById = (req, res) => {
 // Update a display entry by ID
 exports.updateDisplay = (req, res) => {
     const { regno } = req.params; 
-    const { user, nav } = req.body;
-
+    const {  nav } = req.body;
+const user = regno
     // Check if at least one field is provided
     if (!user && !nav) {
         return res.status(400).json({ message: 'At least one field (user or nav) must be provided' });
