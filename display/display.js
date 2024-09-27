@@ -66,44 +66,56 @@ exports.getDisplayById = (req, res) => {
 // Update a display entry by ID
 exports.updateDisplay = (req, res) => {
     const { regno } = req.params; 
-    const { user, nav, screen } = req.body;
+    const { user, nav } = req.body;
 
     // Check if at least one field is provided
-    if (!user && !nav && !screen) {
-        return res.status(400).json({ message: 'At least one field (user, nav, or screen) must be provided' });
+    if (!user && !nav) {
+        return res.status(400).json({ message: 'At least one field (user or nav) must be provided' });
     }
 
-    // Build the SQL query dynamically
-    let updateFields = [];
-    let values = [];
-
-    if (user) {
-        updateFields.push('user = ?');
-        values.push(user);
-    }
-    if (nav) {
-        updateFields.push('nav = ?');
-        values.push(nav);
-    }
-    if (screen) {
-        updateFields.push('screen = ?');
-        values.push(screen);
-    }
-
-    // Add the regno to the values array for the WHERE clause
-    values.push(regno);
-
-    // Ensure that you're using the correct unique identifier in the WHERE clause
-    const updateSql = `UPDATE display_tb SET ${updateFields.join(', ')} WHERE user = ?`;
-
-    db.query(updateSql, values, (err, result) => {
-        if (err) {
-            return res.status(500).json({ message: 'Error updating display entry', error: err.message });
+    // First, retrieve the current nav value
+    const selectSql = `SELECT nav FROM display_tb WHERE regno = ?`;
+    db.query(selectSql, [regno], (selectErr, selectResult) => {
+        if (selectErr) {
+            return res.status(500).json({ message: 'Error retrieving display entry', error: selectErr.message });
         }
-        if (result.affectedRows === 0) {
+        if (selectResult.length === 0) {
             return res.status(404).json({ message: 'Display entry not found' });
         }
-        res.status(200).json({ message: 'Display entry updated successfully' });
+
+        // Parse the existing nav data
+        let existingNav = JSON.parse(selectResult[0].nav);
+
+        // Update the existing nav with the new values
+        if (nav) {
+            existingNav = { ...existingNav, ...nav }; // Merge new nav values
+        }
+
+        // Prepare the SQL update statement
+        let updateFields = [];
+        let values = [];
+
+        if (user) {
+            updateFields.push('user = ?');
+            values.push(user);
+        }
+
+        // Update the nav field
+        updateFields.push('nav = ?');
+        values.push(JSON.stringify(existingNav)); // Convert updated nav object back to JSON string
+
+        // Add the regno to the values array for the WHERE clause
+        values.push(regno);
+
+        // Construct the update SQL query
+        const updateSql = `UPDATE display_tb SET ${updateFields.join(', ')} WHERE user = ?`;
+
+        db.query(updateSql, values, (updateErr, updateResult) => {
+            if (updateErr) {
+                return res.status(500).json({ message: 'Error updating display entry', error: updateErr.message });
+            }
+            res.status(200).json({ message: 'Display entry updated successfully' });
+        });
     });
 };
 
