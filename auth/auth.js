@@ -59,7 +59,7 @@ db.query(currencySql, [user.shop_code], (err, currencyResult) => {
     const currency = currencyResult.length > 0 ? currencyResult[0].currency : null;
 
     // Fetch screen and nav data from display table
-    const displaySql = `SELECT screen, nav FROM display_tb WHERE RegNo = ?`;
+    const displaySql = `SELECT screen, nav FROM display_tb WHERE user = ?`;
     db.query(displaySql, [user.RegNo], (err, displayResult) => {
         if (err) {
             console.error('Error fetching display data:', err);
