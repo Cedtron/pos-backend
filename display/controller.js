@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const displayController = require('../controllers/displayController');
+const displayController = require('./display');
 
 router.post('/adddisplays', displayController.createDisplay);
 router.get('/displays', displayController.getDisplays);
