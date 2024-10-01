@@ -4,7 +4,7 @@ const generateRegNo = require('../conn/reg');
 
 // Create a new sales entry
 exports.createSalesEntry = async (req, res) => {
-    const { Products, shop_code, user ,grandTotal } = req.body;
+    const { Products, shop_code, user, grandTotal, discount, Taxes } = req.body;
 
     if (!Products || !shop_code || !user) {
         return res.status(400).json({ message: 'Required fields are missing' });
@@ -34,8 +34,8 @@ exports.createSalesEntry = async (req, res) => {
 
         // Insert the sale entry into sales_tb
         const sql = `
-            INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, Date, user, shop_code) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
         db.query(sql, [
             RegNo,
@@ -44,6 +44,8 @@ exports.createSalesEntry = async (req, res) => {
             totalQuantity,
             totalStandardAmount,
             totalAmount,
+            discount,   // Include discount in the insert
+            Taxes,      // Include Taxes in the insert
             new Date().toISOString(),
             user,
             shop_code
