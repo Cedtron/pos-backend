@@ -2,7 +2,7 @@ const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 // Create a new product
 exports.createProduct = async (req, res) => {
-    const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code } = req.body;
+    const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code, barcode } = req.body;
 
     // SQL query to check if a product with the same title already exists
     const checkTitleSql = `SELECT * FROM products_tb WHERE title = ? AND shop_code = ?`;
@@ -21,10 +21,13 @@ exports.createProduct = async (req, res) => {
             // Generate a new RegNo for the product entry
             const RegNo = await generateRegNo('P', 'products_tb');
 
-            // SQL query to insert the new product
-            const insertSql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, images, category, sub_category, shop_code) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            // If barcode is not provided, set it to null
+            const productBarcode = barcode || null;
 
-            db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, JSON.stringify(images), category, subCategory, shop_code], (err, result) => {
+            // SQL query to insert the new product
+            const insertSql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, images, category, sub_category, bar_code, shop_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+            db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, JSON.stringify(images), category, subCategory, productBarcode, shop_code], (err, result) => {
                 if (err) {
                     return res.status(500).send(err);
                 }
@@ -69,7 +72,7 @@ exports.getProductById = (req, res) => {
 
 exports.updateProducts = async (req, res) => {
     const { id } = req.params;
-    const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code } = req.body;
+    const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code, barcode } = req.body;
 
     // Create an array to store the fields to update
     let fieldsToUpdate = [];
@@ -123,6 +126,10 @@ exports.updateProducts = async (req, res) => {
     if (subCategory !== undefined) {
         fieldsToUpdate.push('sub_category = ?');
         values.push(subCategory);
+    }
+    if (barcode !== undefined) {
+        fieldsToUpdate.push('bar_code = ?');
+        values.push(barcode);
     }
 
     // If no fields are provided, send an error response
