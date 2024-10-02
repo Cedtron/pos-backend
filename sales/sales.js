@@ -74,12 +74,13 @@ exports.createSalesEntry = async (req, res) => {
 
                     // Create a stock entry for the sold product
                     const stockRegNo = await generateRegNo('S', 'stock_tb');
+                    const status="sales"
                     const stockSql = `
-                        INSERT INTO stock_tb (RegNo, product_code, quantity, reason, user, shop_code)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO stock_tb (RegNo, product_code, quantity,status, reason, user, shop_code)
+                        VALUES (?, ?, ?, ?, ?, ?,?)
                     `;
                     const stockReason = `Sold ${Quantity} of ${stock} units`;
-                    await db.query(stockSql, [stockRegNo, product_code, Quantity, stockReason, user, shop_code]);
+                    await db.query(stockSql, [stockRegNo, product_code, Quantity,status, stockReason, user, shop_code]);
                 } catch (error) {
                     console.error(`Error updating stock for product ${product_code}:`, error);
                     return res.status(500).json({ message: 'Error updating product stock', error: error.message });

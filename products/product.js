@@ -187,18 +187,18 @@ exports.updateProduct = async (req, res) => {
 
                 // Generate a new RegNo for the stock record
                 const stockRegNo = await generateRegNo('S', 'stock_tb');
-
+const status="updated"
                 // SQL query to insert a record into stock_tb
                 const stockSql = `
-                    INSERT INTO stock_tb (RegNo, product_code, quantity, reason, user, shop_code)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO stock_tb (RegNo, product_code, quantity,status, reason, user, shop_code)
+                    VALUES (?, ?, ?, ?,?, ?, ?)
                 `;
 
                 const stockReason = `Updated stock for product RegNo: ${RegNo} with quantity: ${stock}`;
                 
                 // Insert the stock record
                 await new Promise((resolve, reject) => {
-                    connection.query(stockSql, [stockRegNo, RegNo, stock, stockReason, user, shop_code], (err, result) => {
+                    connection.query(stockSql, [stockRegNo, RegNo, stock,status, stockReason, user, shop_code], (err, result) => {
                         if (err) {
                             return reject(err);
                         }

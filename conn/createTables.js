@@ -153,6 +153,7 @@ const createStockTable = `
     quantity INT NOT NULL,
     entry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    status VARCHAR(255),
     reason VARCHAR(255),
     user VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
@@ -213,7 +214,7 @@ const createDisplayTable = `
     id INT AUTO_INCREMENT PRIMARY KEY,
     RegNo VARCHAR(50) NOT NULL,
     user VARCHAR(50) NOT NULL,
-    nav VARCHAR(200) NOT NULL,
+    nav VARCHAR(200) ,
     screen VARCHAR(200),
     shop_code VARCHAR(50) NOT NULL,
     INDEX(shop_code)
