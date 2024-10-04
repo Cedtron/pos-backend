@@ -119,6 +119,7 @@ const createProductsTable = `
   category VARCHAR(100),
   sub_category VARCHAR(100),
   bar_code TEXT,
+  location VARCHAR(25),
   shop_code VARCHAR(50) NOT NULL,
    images JSON,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
