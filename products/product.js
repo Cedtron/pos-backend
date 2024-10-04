@@ -2,7 +2,7 @@ const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 // Create a new product
 exports.createProduct = async (req, res) => {
-    const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code, barcode,location } = req.body;
+    const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code, barcode, location } = req.body;
 
     // SQL query to check if a product with the same title already exists
     const checkTitleSql = `SELECT * FROM products_tb WHERE title = ? AND shop_code = ?`;
@@ -21,13 +21,20 @@ exports.createProduct = async (req, res) => {
             // Generate a new RegNo for the product entry
             const RegNo = await generateRegNo('P', 'products_tb');
 
-            // If barcode is not provided, set it to null
+            // Handle optional fields
+            const productExpdate = expdate || null;
+            const productUnit = unit || null;
+            const productImages = images ? JSON.stringify(images) : null;  // If images exist, convert to JSON, else null
+            const productSubCategory = subCategory || null;
             const productBarcode = barcode || null;
 
             // SQL query to insert the new product
-            const insertSql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, images, category, sub_category, bar_code,location, shop_code) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const insertSql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, images, category, sub_category, bar_code, location, shop_code) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-            db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, JSON.stringify(images), category, subCategory, productBarcode,location, shop_code], (err, result) => {
+            // Insert product with correct handling of null values
+            db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, productExpdate, stock, productUnit, productImages, category, productSubCategory, productBarcode, location, shop_code], 
+            (err, result) => {
                 if (err) {
                     return res.status(500).send(err);
                 }
@@ -40,6 +47,7 @@ exports.createProduct = async (req, res) => {
         }
     });
 };
+
 
 
 // Read all products
