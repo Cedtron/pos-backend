@@ -21,5 +21,6 @@ router.delete('/delproducts/:id', productController.deleteProduct);
 
 // Upload images
 router.post('/upload', upload.array('file', 10), productController.uploadImages);
+router.get('/product/:shop_code/:RegNo', productController.getProductByShopCodeAndRegNo);
 
 module.exports = router;

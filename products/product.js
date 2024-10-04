@@ -264,3 +264,18 @@ exports.uploadImages = (req, res) => {
 
     res.status(200).json({ links });
 };
+
+exports.getProductByShopCodeAndRegNo = (req, res) => {
+    const { shop_code, RegNo } = req.params;
+    const sql = `SELECT * FROM products_tb WHERE shop_code = ? AND RegNo = ?`;
+    
+    db.query(sql, [shop_code, RegNo], (err, result) => {
+        if (err) {
+            return res.status(500).send({ message: 'Database query error', error: err });
+        }
+        if (result.length === 0) {
+            return res.status(404).send({ message: 'Product not found' });
+        }
+        res.status(200).send(result[0]);
+    });
+};
