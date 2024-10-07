@@ -2,8 +2,9 @@ const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 
 
+// Create a new sales entry
 exports.createSalesEntry = async (req, res) => {
-    const { Products, shop_code, user, grandTotal, discount = 0, Taxes = 0 } = req.body;
+    const { Products, shop_code, user, grandTotal, discount, Taxes } = req.body;
 
     if (!Products || !shop_code || !user) {
         return res.status(400).json({ message: 'Required fields are missing' });
@@ -19,10 +20,14 @@ exports.createSalesEntry = async (req, res) => {
         const standardAmounts = Products.map(product => product.StandardAmount);
         const totalAmount = Products.reduce((sum, product) => sum + product.TotalAmount, 0);
 
-        // Calculate discount and tax adjustments if applicable
-        const discountAmount = totalAmount * (discount / 100); // Discount as a percentage
-        const taxAmount = totalAmount * (Taxes / 100);         // Taxes as a percentage
-        const finalAmount = totalAmount - discountAmount + taxAmount;
+        // Calculate the discount and taxes if provided
+        let finalAmount = totalAmount;
+        if (discount && discount > 0) {
+            finalAmount -= discount; // Subtract discount if it's greater than 0
+        }
+        if (Taxes && Taxes > 0) {
+            finalAmount += Taxes; // Add taxes if it's greater than 0
+        }
 
         // Calculate total units and stringify Products array
         const productsJson = JSON.stringify(
@@ -35,6 +40,7 @@ exports.createSalesEntry = async (req, res) => {
                 };
             })
         );
+
         const currentDate = new Date().toISOString().split('T')[0];
 
         // Insert the sale entry into sales_tb
@@ -42,6 +48,7 @@ exports.createSalesEntry = async (req, res) => {
             INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
         const [result] = await db.query(sql, [
             RegNo,
             productsJson,     // Products array as a JSON string
@@ -57,7 +64,7 @@ exports.createSalesEntry = async (req, res) => {
         ]);
 
         // Get the inserted sale entry ID
-        const saleId = result.insertId;
+        const saleId = result.insertId; // This will contain the new sale ID
 
         // Update stock and create stock entries for each product
         for (const product of Products) {
@@ -83,7 +90,7 @@ exports.createSalesEntry = async (req, res) => {
             await db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
         }
 
-        // Send success response along with the new sale ID
+        // Send success response with the new sale ID
         res.status(201).json({ message: 'Sale entry created successfully', saleId });
 
     } catch (error) {
