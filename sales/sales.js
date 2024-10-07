@@ -2,7 +2,6 @@ const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 
 
-// Create a new sales entry
 exports.createSalesEntry = async (req, res) => {
     const { Products, shop_code, user, grandTotal, discount, Taxes } = req.body;
 
@@ -32,12 +31,13 @@ exports.createSalesEntry = async (req, res) => {
             })
         );
         const currentDate = new Date().toISOString().split('T')[0];
+
         // Insert the sale entry into sales_tb
         const sql = `
             INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        db.query(sql, [
+        await db.query(sql, [
             RegNo,
             productsJson,     // Products array as a JSON string
             totalUnits,       // Total Units
@@ -46,7 +46,7 @@ exports.createSalesEntry = async (req, res) => {
             totalAmount,      // Total Amount
             discount,         // Discount
             Taxes,            // Taxes
-            currentDate,  // Date
+            currentDate,      // Date
             user,             // User who created the sale
             shop_code         // Shop code
         ]);
@@ -62,7 +62,7 @@ exports.createSalesEntry = async (req, res) => {
                 SET stock = ? 
                 WHERE RegNo = ? AND shop_code = ?
             `;
-             db.query(updateSql, [updatedStock, product_code, shop_code]);
+            await db.query(updateSql, [updatedStock, product_code, shop_code]);
 
             // Create a stock entry for the sold product
             const stockRegNo = await generateRegNo('S', 'stock_tb');
@@ -72,7 +72,7 @@ exports.createSalesEntry = async (req, res) => {
                 INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
-             db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
+            await db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
         }
 
         // Send success response
