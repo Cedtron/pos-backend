@@ -17,7 +17,7 @@ exports.createSalesEntry = async (req, res) => {
         // Calculate totals for the sale entry
         let totalUnits = 0;
         const totalQuantity = Products.reduce((sum, product) => sum + product.Quantity, 0);
-        const totalStandardAmount = Products.reduce((sum, product) => sum + product.StandardAmount, 0);
+        const standardAmounts = Products.map(product => product.StandardAmount);
         const totalAmount = Products.reduce((sum, product) => sum + product.TotalAmount, 0);
 
         // Calculate total units and stringify Products array
@@ -42,7 +42,7 @@ exports.createSalesEntry = async (req, res) => {
             productsJson,
             totalUnits,
             totalQuantity,
-            totalStandardAmount,
+            standardAmounts,
             totalAmount,
             discount,   // Include discount in the insert
             Taxes,      // Include Taxes in the insert
