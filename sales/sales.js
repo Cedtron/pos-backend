@@ -18,32 +18,57 @@ exports.createSalesEntry = async (req, res) => {
         // Generate RegNo for the sale
         const RegNo = await generateRegNo('S', 'sales_tb');
 
-        // Calculate totals for the sale entry
         let totalUnits = 0;
-        const totalQuantity = Products.reduce((sum, product) => sum + product.Quantity, 0);
-        const standardAmounts = Products.map(product => product.StandardAmount);
-        const totalAmount = Products.reduce((sum, product) => sum + product.TotalAmount, 0);
+        let totalAmount, totalQuantity, standardAmounts;
+
+        try {
+            // Calculate totals for the sale entry
+            totalQuantity = Products.reduce((sum, product) => sum + product.Quantity, 0);
+        } catch (error) {
+            console.error("Error in calculating totalQuantity: ", error);
+            return res.status(500).json({ message: 'Error calculating totalQuantity' });
+        }
+
+        try {
+            standardAmounts = Products.map(product => product.StandardAmount);
+        } catch (error) {
+            console.error("Error in mapping standardAmounts: ", error);
+            return res.status(500).json({ message: 'Error mapping standardAmounts' });
+        }
+
+        try {
+            totalAmount = Products.reduce((sum, product) => sum + product.TotalAmount, 0);
+        } catch (error) {
+            console.error("Error in calculating totalAmount: ", error);
+            return res.status(500).json({ message: 'Error calculating totalAmount' });
+        }
 
         // Calculate the discount and taxes if provided
         let finalAmount = totalAmount;
         if (discount && discount > 0) {
-            finalAmount -= discount; // Subtract discount if it's greater than 0
+            finalAmount -= discount;
         }
         if (Taxes && Taxes > 0) {
-            finalAmount += Taxes; // Add taxes if it's greater than 0
+            finalAmount += Taxes;
         }
 
-        // Calculate total units and stringify Products array
-        const productsJson = JSON.stringify(
-            Products.map((product) => {
-                const totalProductUnits = product.Unit * product.Quantity;
-                totalUnits += totalProductUnits; // Sum up the total units
-                return {
-                    ...product,
-                    TotalUnits: totalProductUnits, // Add TotalUnits for each product
-                };
-            })
-        );
+        let productsJson;
+        try {
+            // Calculate total units and stringify Products array
+            productsJson = JSON.stringify(
+                Products.map((product) => {
+                    const totalProductUnits = product.Unit * product.Quantity;
+                    totalUnits += totalProductUnits;
+                    return {
+                        ...product,
+                        TotalUnits: totalProductUnits,
+                    };
+                })
+            );
+        } catch (error) {
+            console.error("Error stringifying productsJson: ", error);
+            return res.status(500).json({ message: 'Error processing Products' });
+        }
 
         const currentDate = new Date().toISOString().split('T')[0];
 
@@ -75,7 +100,6 @@ exports.createSalesEntry = async (req, res) => {
                 const { product_code, Quantity, stock } = product;
                 const updatedStock = stock - Quantity;
 
-                // Update product stock in the products_tb
                 const updateSql = `
                     UPDATE products_tb 
                     SET stock = ? 
@@ -83,7 +107,6 @@ exports.createSalesEntry = async (req, res) => {
                 `;
                 await db.query(updateSql, [updatedStock, product_code, shop_code]);
 
-                // Create a stock entry for the sold product
                 const stockRegNo = await generateRegNo('S', 'stock_tb');
                 const status = 'sales';
                 const stockReason = `Sold ${Quantity} of ${stock} units`;
