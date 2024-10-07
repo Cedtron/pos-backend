@@ -49,20 +49,20 @@ exports.createSalesEntry = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const [result] = await db.query(sql, [
+        const result = await db.query(sql, [
             RegNo,
-            productsJson,     // Products array as a JSON string
-            totalUnits,       // Total Units
-            totalQuantity,    // Total Quantity
-            JSON.stringify(standardAmounts),  // Convert standard amounts array to JSON string
-            finalAmount,      // Final Amount after discount and taxes
-            discount,         // Discount
-            Taxes,            // Taxes
-            currentDate,      // Date
-            user,             // User who created the sale
-            shop_code         // Shop code
+            productsJson,
+            totalUnits,
+            totalQuantity,
+            JSON.stringify(standardAmounts),
+            finalAmount,
+            discount,
+            Taxes,
+            currentDate,
+            user,
+            shop_code
         ]);
-
+        
         // Get the inserted sale entry ID
         const saleId = result.insertId; // This will contain the new sale ID
 
