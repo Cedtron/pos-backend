@@ -83,7 +83,7 @@ exports.createSalesEntry = async (req, res) => {
             productsJson,
             totalUnits,
             totalQuantity,
-            JSON.stringify(standardAmounts),
+            standardAmounts,
             finalAmount,
             discount,
             Taxes,
