@@ -63,6 +63,12 @@ exports.createSalesEntry = async (req, res) => {
             shop_code
         ]);
         
+        if (result.affectedRows > 0) {
+            const saleId = result.insertId; // This will contain the new sale ID
+            res.status(201).json({ message: 'Sale entry created successfully', saleId });
+        } else {
+            res.status(500).json({ message: 'Sale entry not created' });
+        }
         // Get the inserted sale entry ID
         const saleId = result.insertId; // This will contain the new sale ID
 
