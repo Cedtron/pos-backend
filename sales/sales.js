@@ -107,8 +107,6 @@ exports.createSalesEntry = async (req, res) => {
     }
 };
 
-
-
 // Read all sales entries
 exports.getAllSalesEntries = (req, res) => {
     const sql = `SELECT * FROM sales_tb ORDER BY id DESC`;
