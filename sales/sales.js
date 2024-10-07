@@ -9,6 +9,11 @@ exports.createSalesEntry = async (req, res) => {
         return res.status(400).json({ message: 'Required fields are missing' });
     }
 
+    // Ensure Products is an array
+    if (!Array.isArray(Products) || Products.length === 0) {
+        return res.status(400).json({ message: 'Products should be a non-empty array' });
+    }
+
     try {
         // Generate RegNo for the sale
         const RegNo = await generateRegNo('S', 'sales_tb');
@@ -101,6 +106,7 @@ exports.createSalesEntry = async (req, res) => {
         res.status(500).json({ message: 'Error creating sale entry', error: error.message });
     }
 };
+
 
 
 // Read all sales entries
