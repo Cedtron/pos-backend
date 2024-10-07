@@ -31,7 +31,7 @@ exports.createSalesEntry = async (req, res) => {
                 };
             })
         );
-
+        const currentDate = new Date().toISOString().split('T')[0];
         // Insert the sale entry into sales_tb
         const sql = `
             INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
@@ -46,7 +46,7 @@ exports.createSalesEntry = async (req, res) => {
             totalAmount,      // Total Amount
             discount,         // Discount
             Taxes,            // Taxes
-            new Date().toISOString(),  // Date
+            currentDate,  // Date
             user,             // User who created the sale
             shop_code         // Shop code
         ]);
