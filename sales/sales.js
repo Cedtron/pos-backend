@@ -37,7 +37,7 @@ exports.createSalesEntry = async (req, res) => {
             INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        await query(sql, [
+        db.query(sql, [
             RegNo,
             productsJson,     // Products array as a JSON string
             totalUnits,       // Total Units
