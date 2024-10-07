@@ -49,7 +49,7 @@ exports.createSalesEntry = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const result = await db.query(sql, [
+        const result =  db.query(sql, [
             RegNo,
             productsJson,
             totalUnits,
@@ -77,7 +77,7 @@ exports.createSalesEntry = async (req, res) => {
                 SET stock = ? 
                 WHERE RegNo = ? AND shop_code = ?
             `;
-            await db.query(updateSql, [updatedStock, product_code, shop_code]);
+             db.query(updateSql, [updatedStock, product_code, shop_code]);
 
             // Create a stock entry for the sold product
             const stockRegNo = await generateRegNo('S', 'stock_tb');
@@ -87,7 +87,7 @@ exports.createSalesEntry = async (req, res) => {
                 INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
-            await db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
+             db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
         }
 
         // Send success response with the new sale ID
