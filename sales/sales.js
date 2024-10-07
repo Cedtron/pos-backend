@@ -37,59 +37,50 @@ exports.createSalesEntry = async (req, res) => {
             INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        db.query(sql, [
+        await query(sql, [
             RegNo,
-            productsJson,
-            totalUnits,
-            totalQuantity,
-            standardAmounts,
-            totalAmount,
-            discount,   // Include discount in the insert
-            Taxes,      // Include Taxes in the insert
-            new Date().toISOString(),
-            user,
-            shop_code
-        ], async (err, result) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error inserting sale entry', error: err.message });
-            }
+            productsJson,     // Products array as a JSON string
+            totalUnits,       // Total Units
+            totalQuantity,    // Total Quantity
+            JSON.stringify(standardAmounts),  // Convert standard amounts array to JSON string
+            totalAmount,      // Total Amount
+            discount,         // Discount
+            Taxes,            // Taxes
+            new Date().toISOString(),  // Date
+            user,             // User who created the sale
+            shop_code         // Shop code
+        ]);
 
-            const newSaleId = result.insertId;
+        // Update stock and create stock entries for each product
+        for (const product of Products) {
+            const { product_code, Quantity, stock } = product;
+            const updatedStock = stock - Quantity;
 
-            // Update stock and create stock entries for each product
-            for (const product of Products) {
-                const { product_code, Quantity, stock } = product;
-                const updatedStock = stock - Quantity;
+            // Update product stock in the products_tb
+            const updateSql = `
+                UPDATE products_tb 
+                SET stock = ? 
+                WHERE RegNo = ? AND shop_code = ?
+            `;
+            await query(updateSql, [updatedStock, product_code, shop_code]);
 
-                try {
-                    // Update product stock in the products_tb
-                    const updateSql = `
-                        UPDATE products_tb 
-                        SET stock = ? 
-                        WHERE RegNo = ? AND shop_code = ?
-                    `;
-                    
-                    await db.query(updateSql, [updatedStock, product_code, shop_code]);
-                    console.log(`Successfully updated stock for product: ${product_code}`);
+            // Create a stock entry for the sold product
+            const stockRegNo = await generateRegNo('S', 'stock_tb');
+            const status = 'sales';
+            const stockReason = `Sold ${Quantity} of ${stock} units`;
+            const stockSql = `
+                INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+            await query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
+        }
 
-                    // Create a stock entry for the sold product
-                    const stockRegNo = await generateRegNo('S', 'stock_tb');
-                    const status="sales"
-                    const stockSql = `
-                        INSERT INTO stock_tb (RegNo, product_code, quantity,status, reason, user, shop_code)
-                        VALUES (?, ?, ?, ?, ?, ?,?)
-                    `;
-                    const stockReason = `Sold ${Quantity} of ${stock} units`;
-                    await db.query(stockSql, [stockRegNo, product_code, Quantity,status, stockReason, user, shop_code]);
-                } catch (error) {
-                    console.error(`Error updating stock for product ${product_code}:`, error);
-                    return res.status(500).json({ message: 'Error updating product stock', error: error.message });
-                }
-            }
+        // Send success response
+        res.status(201).json({ message: 'Sale entry created successfully' });
 
-            res.status(201).json({ message: 'Sale entry created successfully', id: newSaleId });
-        });
     } catch (error) {
+        // Log error and send response
+        console.error('Error creating sale entry:', error);
         res.status(500).json({ message: 'Error creating sale entry', error: error.message });
     }
 };
