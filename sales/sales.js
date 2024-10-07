@@ -49,7 +49,7 @@ exports.createSalesEntry = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const result =  db.query(sql, [
+        const [result] = await db.query(sql, [
             RegNo,
             productsJson,
             totalUnits,
@@ -62,42 +62,39 @@ exports.createSalesEntry = async (req, res) => {
             user,
             shop_code
         ]);
-        
+
         if (result.affectedRows > 0) {
             const saleId = result.insertId; // This will contain the new sale ID
+
+            // Update stock and create stock entries for each product
+            for (const product of Products) {
+                const { product_code, Quantity, stock } = product;
+                const updatedStock = stock - Quantity;
+
+                // Update product stock in the products_tb
+                const updateSql = `
+                    UPDATE products_tb 
+                    SET stock = ? 
+                    WHERE RegNo = ? AND shop_code = ?
+                `;
+                await db.query(updateSql, [updatedStock, product_code, shop_code]);
+
+                // Create a stock entry for the sold product
+                const stockRegNo = await generateRegNo('S', 'stock_tb');
+                const status = 'sales';
+                const stockReason = `Sold ${Quantity} of ${stock} units`;
+                const stockSql = `
+                    INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
+                await db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
+            }
+
+            // Send success response with the new sale ID
             res.status(201).json({ message: 'Sale entry created successfully', saleId });
         } else {
             res.status(500).json({ message: 'Sale entry not created' });
         }
-        // Get the inserted sale entry ID
-        const saleId = result.insertId; // This will contain the new sale ID
-
-        // Update stock and create stock entries for each product
-        for (const product of Products) {
-            const { product_code, Quantity, stock } = product;
-            const updatedStock = stock - Quantity;
-
-            // Update product stock in the products_tb
-            const updateSql = `
-                UPDATE products_tb 
-                SET stock = ? 
-                WHERE RegNo = ? AND shop_code = ?
-            `;
-             db.query(updateSql, [updatedStock, product_code, shop_code]);
-
-            // Create a stock entry for the sold product
-            const stockRegNo = await generateRegNo('S', 'stock_tb');
-            const status = 'sales';
-            const stockReason = `Sold ${Quantity} of ${stock} units`;
-            const stockSql = `
-                INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `;
-             db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
-        }
-
-        // Send success response with the new sale ID
-        res.status(201).json({ message: 'Sale entry created successfully', saleId });
 
     } catch (error) {
         // Log error and send response
