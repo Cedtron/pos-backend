@@ -19,29 +19,19 @@ exports.createSalesEntry = async (req, res) => {
         const RegNo = await generateRegNo('S', 'sales_tb');
 
         let totalUnits = 0;
-        let totalAmount, totalQuantity, standardAmounts;
+        let totalAmount = 0;
+        let totalQuantity = 0;
+        let standardAmounts = [];
 
-        try {
-            // Calculate totals for the sale entry
-            totalQuantity = Products.reduce((sum, product) => sum + product.Quantity, 0);
-        } catch (error) {
-            console.error("Error in calculating totalQuantity: ", error);
-            return res.status(500).json({ message: 'Error calculating totalQuantity' });
-        }
+        // Calculate totals for the sale entry
+        Products.forEach(product => {
+            totalQuantity += product.Quantity;
+            totalAmount += product.TotalAmount;
+            standardAmounts.push(product.StandardAmount);
 
-        try {
-            standardAmounts = Products.map(product => product.StandardAmount);
-        } catch (error) {
-            console.error("Error in mapping standardAmounts: ", error);
-            return res.status(500).json({ message: 'Error mapping standardAmounts' });
-        }
-
-        try {
-            totalAmount = Products.reduce((sum, product) => sum + product.TotalAmount, 0);
-        } catch (error) {
-            console.error("Error in calculating totalAmount: ", error);
-            return res.status(500).json({ message: 'Error calculating totalAmount' });
-        }
+            // Add up total units
+            totalUnits += product.Unit * product.Quantity;
+        });
 
         // Calculate the discount and taxes if provided
         let finalAmount = totalAmount;
@@ -52,39 +42,20 @@ exports.createSalesEntry = async (req, res) => {
             finalAmount += Taxes;
         }
 
-        let productsJson;
-        try {
-            // Calculate total units and stringify Products array
-            productsJson = JSON.stringify(
-                Products.map((product) => {
-                    const totalProductUnits = product.Unit * product.Quantity;
-                    totalUnits += totalProductUnits;
-                    return {
-                        ...product,
-                        TotalUnits: totalProductUnits,
-                    };
-                })
-            );
-        } catch (error) {
-            console.error("Error stringifying productsJson: ", error);
-            return res.status(500).json({ message: 'Error processing Products' });
-        }
-
         const currentDate = new Date().toISOString().split('T')[0];
 
-        // Insert the sale entry into sales_tb
+        // Insert the sale entry into sales_tb (using integers, not JSON)
         const sql = `
-            INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO sales_tb (RegNo, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const [result] = await db.query(sql, [
             RegNo,
-            productsJson,
-            totalUnits,
-            totalQuantity,
-            standardAmounts,
-            finalAmount,
+            totalUnits, // Total units as int
+            totalQuantity, // Total quantity as int
+            standardAmounts.reduce((a, b) => a + b, 0), // Sum of standard amounts (or another aggregated value if needed)
+            finalAmount, // Final calculated amount
             discount,
             Taxes,
             currentDate,
@@ -100,6 +71,7 @@ exports.createSalesEntry = async (req, res) => {
                 const { product_code, Quantity, stock } = product;
                 const updatedStock = stock - Quantity;
 
+                // Update product stock in the products_tb
                 const updateSql = `
                     UPDATE products_tb 
                     SET stock = ? 
@@ -107,6 +79,7 @@ exports.createSalesEntry = async (req, res) => {
                 `;
                 await db.query(updateSql, [updatedStock, product_code, shop_code]);
 
+                // Create a stock entry for the sold product
                 const stockRegNo = await generateRegNo('S', 'stock_tb');
                 const status = 'sales';
                 const stockReason = `Sold ${Quantity} of ${stock} units`;
