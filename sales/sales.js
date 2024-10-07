@@ -2,7 +2,6 @@ const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 
 
-// Create a new sales entry
 exports.createSalesEntry = async (req, res) => {
     const { Products, shop_code, user, grandTotal, discount, Taxes } = req.body;
 
