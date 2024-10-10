@@ -5,11 +5,12 @@ const generateRegNo = require('../conn/reg');
 exports.createSalesEntry = async (req, res) => {
     const { Products, shop_code, user, grandTotal, discount, Taxes } = req.body;
 
+    // Validate required fields
     if (!Products || !shop_code || !user) {
         return res.status(400).json({ message: 'Required fields are missing' });
     }
 
-    // Ensure Products is an array
+    // Ensure Products is a non-empty array
     if (!Array.isArray(Products) || Products.length === 0) {
         return res.status(400).json({ message: 'Products should be a non-empty array' });
     }
@@ -33,7 +34,7 @@ exports.createSalesEntry = async (req, res) => {
             totalUnits += product.Unit * product.Quantity;
         });
 
-        // Calculate the discount and taxes if provided
+        // Calculate the final amount after discount and taxes
         let finalAmount = totalAmount;
         if (discount && discount > 0) {
             finalAmount -= discount;
@@ -44,7 +45,7 @@ exports.createSalesEntry = async (req, res) => {
 
         const currentDate = new Date().toISOString().split('T')[0];
 
-        // Insert the sale entry into sales_tb (using integers, not JSON)
+        // Insert the sale entry into sales_tb
         const sql = `
             INSERT INTO sales_tb (RegNo, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -54,7 +55,7 @@ exports.createSalesEntry = async (req, res) => {
             RegNo,
             totalUnits, // Total units as int
             totalQuantity, // Total quantity as int
-            standardAmounts.reduce((a, b) => a + b, 0), // Sum of standard amounts (or another aggregated value if needed)
+            standardAmounts.reduce((a, b) => a + b, 0), // Sum of standard amounts
             finalAmount, // Final calculated amount
             discount,
             Taxes,
@@ -63,8 +64,9 @@ exports.createSalesEntry = async (req, res) => {
             shop_code
         ]);
 
+        // Check if the insert was successful and handle stock updates
         if (result.affectedRows > 0) {
-            const saleId = result.insertId; // This will contain the new sale ID
+            const saleId = result.insertId; // New sale ID
 
             // Update stock and create stock entries for each product
             for (const product of Products) {
@@ -91,17 +93,18 @@ exports.createSalesEntry = async (req, res) => {
             }
 
             // Send success response with the new sale ID
-            res.status(201).json({ message: 'Sale entry created successfully', saleId });
+            return res.status(201).json({ message: 'Sale entry created successfully', saleId });
         } else {
-            res.status(500).json({ message: 'Sale entry not created' });
+            return res.status(500).json({ message: 'Sale entry not created' });
         }
 
     } catch (error) {
         // Log error and send response
         console.error('Error creating sale entry:', error);
-        res.status(500).json({ message: 'Error creating sale entry', error: error.message });
+        return res.status(500).json({ message: 'Error creating sale entry', error: error.message });
     }
 };
+
 
 // Read all sales entries
 exports.getAllSalesEntries = (req, res) => {
