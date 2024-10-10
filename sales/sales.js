@@ -51,22 +51,23 @@ exports.createSalesEntry = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const [result] = await db.query(sql, [
+        const result = await db.query(sql, [
             RegNo,
-            totalUnits, // Total units as int
-            totalQuantity, // Total quantity as int
-            standardAmounts.reduce((a, b) => a + b, 0), // Sum of standard amounts
-            finalAmount, // Final calculated amount
+            totalUnits,
+            totalQuantity,
+            standardAmounts.reduce((a, b) => a + b, 0),
+            finalAmount,
             discount,
             Taxes,
             currentDate,
             user,
             shop_code
         ]);
+        console.log('Query result:', result); // Log the entire result to inspect
 
         // Check if the insert was successful and handle stock updates
-        if (result.affectedRows > 0) {
-            const saleId = result.insertId; // New sale ID
+        if (affectedRows > 0) {
+            const saleId = result[0].insertId;// New sale ID
 
             // Update stock and create stock entries for each product
             for (const product of Products) {
