@@ -62,7 +62,7 @@ exports.createSalesEntry = async (req, res) => {
         console.log('SQL Query:', query);
         console.log('Values:', values);
 
-        const result = await db.query(query, values);
+        const result =  db.query(query, values);
         console.log('DB Result:', result); // Log the result object
 
         // Check if sale entry was created
