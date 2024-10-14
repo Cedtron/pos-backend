@@ -59,7 +59,11 @@ exports.createSalesEntry = async (req, res) => {
             shop_code
         ];
 
+        console.log('SQL Query:', query);
+        console.log('Values:', values);
+
         const result = await db.query(query, values);
+        console.log('DB Result:', result); // Log the result object
 
         // Check if sale entry was created
         if (result.affectedRows > 0) {
@@ -95,10 +99,11 @@ exports.createSalesEntry = async (req, res) => {
             return res.status(500).json({ message: 'Sale entry not created' });
         }
     } catch (error) {
-        console.error('Error during sale entry creation:', error);
+        console.error('Error during sale entry creation:', error); // Log the error
         res.status(500).json({ message: 'Error creating sale entry', error });
     }
 };
+
 
 
 
