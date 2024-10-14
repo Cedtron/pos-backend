@@ -2,39 +2,35 @@ const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 
 
-exports.createSalesEntry = async (req, res) => {
+exports.createSalesEntry = (req, res) => {
     const { Products, shop_code, user, grandTotal, discount, Taxes } = req.body;
 
-    // Validate required fields
     if (!Products || !shop_code || !user) {
         return res.status(400).json({ message: 'Required fields are missing' });
     }
 
-    // Ensure Products is a non-empty array
     if (!Array.isArray(Products) || Products.length === 0) {
         return res.status(400).json({ message: 'Products should be a non-empty array' });
     }
 
-    try {
-        // Generate RegNo for the sale
-        const RegNo = await generateRegNo('S', 'sales_tb');
+    // Generate the sales RegNo dynamically (you can adjust the generateRegNo function as needed)
+    generateRegNo('S', 'sales_tb', (err, RegNo) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error generating RegNo' });
+        }
 
         let totalUnits = 0;
         let totalAmount = 0;
         let totalQuantity = 0;
         let standardAmounts = [];
 
-        // Calculate totals for the sale entry
         Products.forEach(product => {
             totalQuantity += product.Quantity;
             totalAmount += product.TotalAmount;
             standardAmounts.push(product.StandardAmount);
-
-            // Add up total units
             totalUnits += product.Unit * product.Quantity;
         });
 
-        // Calculate the final amount after discount and taxes
         let finalAmount = totalAmount;
         if (discount && discount > 0) {
             finalAmount -= discount;
@@ -45,15 +41,15 @@ exports.createSalesEntry = async (req, res) => {
 
         const currentDate = new Date().toISOString().split('T')[0];
 
-        // Insert the sale entry into sales_tb
-        const sql = `
-            INSERT INTO sales_tb (RegNo,Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code) 
-            VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?)
+        // Execute the MySQL insert query
+        const query = `
+            INSERT INTO sales_tb (RegNo, Product, Unit, Quantity, StandardAmount, TotalAmount, discount, Taxes, Date, user, shop_code)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const result = await db.query(sql, [
+        const values = [
             RegNo,
-            JSON.stringify(Products),
+            JSON.stringify(Products),  // Store products as a JSON string
             totalUnits,
             totalQuantity,
             standardAmounts.reduce((a, b) => a + b, 0),
@@ -63,50 +59,57 @@ exports.createSalesEntry = async (req, res) => {
             currentDate,
             user,
             shop_code
-        ]);
-        console.log('Query result:', result); // Log the entire result to inspect
-        const affectedRows = result[0].affectedRows; // Access affectedRows
-        const saleId = result[0].insertId; // Access insertId
-    
-        // Check if the insert was successful and handle stock updates
-        if (affectedRows > 0) {
-          
+        ];
 
-            // Update stock and create stock entries for each product
-            for (const product of Products) {
-                const { product_code, Quantity, stock } = product;
-                const updatedStock = stock - Quantity;
-
-                // Update product stock in the products_tb
-                const updateSql = `
-                    UPDATE products_tb 
-                    SET stock = ? 
-                    WHERE RegNo = ? AND shop_code = ?
-                `;
-                await db.query(updateSql, [updatedStock, product_code, shop_code]);
-
-                // Create a stock entry for the sold product
-                const stockRegNo = await generateRegNo('S', 'stock_tb');
-                const status = 'sales';
-                const stockReason = `Sold ${Quantity} of ${stock} units`;
-                const stockSql = `
-                    INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                `;
-                await db.query(stockSql, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
+        db.query(query, values, (error, result) => {
+            if (error) {
+                console.error('Error executing query:', error);
+                return res.status(500).json({ message: 'Error creating sale entry', error });
             }
 
-            // Send success response with the new sale ID
-            return res.status(201).json({ message: 'Sale entry created successfully', saleId });
-        } else {
-            return res.status(500).json({ message: 'Sale entry not created' });
-        }
+            // Check if the insert was successful
+            if (result.affectedRows > 0) {
+                const saleId = result.insertId;
 
-    } catch (error) {
-        // Log error and send response
-        console.error('Error creating sale entry:', error);
-        return res.status(500).json({ message: 'Error creating sale entry', error: error.message });
-    }
+                // Proceed with stock update logic for each product
+                Products.forEach(product => {
+                    const { product_code, Quantity, stock } = product;
+                    const updatedStock = stock - Quantity;
+
+                    // Update the stock for each product
+                    const updateStockQuery = `
+                        UPDATE products_tb 
+                        SET stock = ? 
+                        WHERE RegNo = ? AND shop_code = ?
+                    `;
+                    db.query(updateStockQuery, [updatedStock, product_code, shop_code], (err) => {
+                        if (err) {
+                            console.error('Error updating stock:', err);
+                        }
+                    });
+
+                    // Insert into the stock log
+                    const stockRegNo = generateRegNo('S', 'stock_tb'); // Adjust this as needed
+                    const status = 'sales';
+                    const stockReason = `Sold ${Quantity} of ${stock} units`;
+
+                    const stockLogQuery = `
+                        INSERT INTO stock_tb (RegNo, product_code, quantity, status, reason, user, shop_code)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `;
+                    db.query(stockLogQuery, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code], (err) => {
+                        if (err) {
+                            console.error('Error inserting stock log:', err);
+                        }
+                    });
+                });
+
+                return res.status(201).json({ message: 'Sale entry created successfully', saleId });
+            } else {
+                return res.status(500).json({ message: 'Sale entry not created' });
+            }
+        });
+    });
 };
 
 
