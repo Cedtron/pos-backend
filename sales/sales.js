@@ -106,12 +106,23 @@ exports.createSalesEntry = async (req, res) => {
 
 
 
-
-// Read all sales entries
 exports.getAllSalesEntries = (req, res) => {
-    const sql = `SELECT * FROM sales_tb ORDER BY id DESC`;
+    // Extract shop_code from the query parameters
+    const { shop_code } = req.query;
 
-    db.query(sql, (err, results) => {
+    // Base SQL query
+    let sql = `SELECT * FROM sales_tb`;
+
+    // If shop_code is provided, add a WHERE clause to filter results
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+    }
+
+    // Always order by id DESC
+    sql += ` ORDER BY id DESC`;
+
+    // Execute the query
+    db.query(sql, shop_code ? [shop_code] : [], (err, results) => {
         if (err) {
             return res.status(500).send(err);
         }
@@ -135,6 +146,8 @@ exports.getSalesEntryById = (req, res) => {
         res.status(200).send(result[0]);
     });
 };
+
+
 // Read a single sales entry by ID
 exports.getSalesEntryByUser = (req, res) => {
     const { user } = req.params; // Access the user from the URL parameters
