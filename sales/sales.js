@@ -53,7 +53,7 @@ exports.createSalesEntry = async (req, res) => {
 
         const result = await db.query(sql, [
             RegNo,
-            Products,
+            JSON.stringify(Products),
             totalUnits,
             totalQuantity,
             standardAmounts.reduce((a, b) => a + b, 0),
