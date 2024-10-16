@@ -62,12 +62,14 @@ exports.createSalesEntry = async (req, res) => {
         console.log('SQL Query:', query);
         console.log('Values:', values);
 
-        const result =  db.query(query, values);
+        // Wait for the sales entry to be inserted
+        const [result] = await db.query(query, values);  // Ensure `await` is used here
+
         console.log('DB Result:', result); // Log the result object
 
         // Check if sale entry was created
         if (result.affectedRows > 0) {
-            const saleId = result.insertId;
+            const saleId = result.insertId;  // Get the inserted sale ID
 
             // Proceed with stock update logic for each product
             for (const product of Products) {
@@ -94,6 +96,7 @@ exports.createSalesEntry = async (req, res) => {
                 await db.query(stockLogQuery, [stockRegNo, product_code, Quantity, status, stockReason, user, shop_code]);
             }
 
+            // Send the inserted sale ID back to the frontend
             return res.status(201).json({ message: 'Sale entry created successfully', saleId });
         } else {
             return res.status(500).json({ message: 'Sale entry not created' });
@@ -103,6 +106,7 @@ exports.createSalesEntry = async (req, res) => {
         res.status(500).json({ message: 'Error creating sale entry', error });
     }
 };
+
 
 
 
