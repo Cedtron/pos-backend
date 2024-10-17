@@ -9,45 +9,49 @@ exports.createProduct = async (req, res) => {
 
     db.query(checkTitleSql, [title, shop_code], async (err, result) => {
         if (err) {
-            return res.status(500).send(err);
+            return res.status(500).send({ message: 'Database error during title check', error: err });
         }
 
         if (result.length > 0) {
             // Product with the same title already exists in the same shop
-            return res.status(400).send({ message: 'Product already exists' });
+            return res.status(400).send({ message: 'Product with this title already exists' });
         }
 
         try {
             // Generate a new RegNo for the product entry
             const RegNo = await generateRegNo('P', 'products_tb');
 
-            // Handle optional fields
+            // Handle optional fields, set null if not provided
             const productExpdate = expdate || null;
             const productUnit = unit || null;
-            const productImages = images ? JSON.stringify(images) : null;  // If images exist, convert to JSON, else null
+            const productImages = images ? JSON.stringify(images) : null;  // If images exist, convert to JSON
             const productSubCategory = subCategory || null;
-            const productBarcode = barcode || null;
+            const productBarcode = barcode || null; // Barcode can be scanned or manually entered
+            const productLocation = location || null; // Location is optional, handle as null if not present
 
             // SQL query to insert the new product
-            const insertSql = `INSERT INTO products_tb (RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, images, category, sub_category, bar_code, location, shop_code) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const insertSql = `
+                INSERT INTO products_tb 
+                (RegNo, title, description, brand, price, costprice, color, expdate, stock, unit, images, category, sub_category, bar_code, location, shop_code) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
 
-            // Insert product with correct handling of null values
-            db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, productExpdate, stock, productUnit, productImages, category, productSubCategory, productBarcode, location, shop_code], 
+            // Insert the product into the database
+            db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, productExpdate, stock, productUnit, productImages, category, productSubCategory, productBarcode, productLocation, shop_code], 
             (err, result) => {
                 if (err) {
-                    return res.status(500).send(err);
+                    return res.status(500).send({ message: 'Error inserting product', error: err });
                 }
 
-                res.status(201).send({ id: result.insertId, RegNo });
+                // Return the newly inserted product ID and RegNo as a response
+                res.status(201).send({ id: result.insertId, RegNo, message: 'Product created successfully' });
             });
         } catch (err) {
             console.error("Error generating RegNo:", err);
-            return res.status(500).send({ message: 'Error generating RegNo' });
+            return res.status(500).send({ message: 'Error generating RegNo', error: err });
         }
     });
 };
-
 
 
 // Read all products
@@ -79,14 +83,14 @@ exports.getProductById = (req, res) => {
 // Update a product by ID
 
 exports.updateProducts = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // Product ID from the URL parameters
     const { title, description, brand, price, costprice, color, expdate, stock, unit, images, category, subCategory, shop_code, barcode, location } = req.body;
 
-    // Create an array to store the fields to update
+    // Create an array to store the fields that need updating and corresponding values
     let fieldsToUpdate = [];
     let values = [];
 
-    // Add only the fields that are not undefined or null
+    // Add fields to update only if they are provided (not undefined or null)
     if (title !== undefined) {
         fieldsToUpdate.push('title = ?');
         values.push(title);
@@ -125,7 +129,7 @@ exports.updateProducts = async (req, res) => {
     }
     if (images !== undefined) {
         fieldsToUpdate.push('images = ?');
-        values.push(JSON.stringify(images));
+        values.push(JSON.stringify(images)); // Convert the images array to a JSON string
     }
     if (category !== undefined) {
         fieldsToUpdate.push('category = ?');
@@ -143,21 +147,26 @@ exports.updateProducts = async (req, res) => {
         fieldsToUpdate.push('location = ?');
         values.push(location);
     }
-    // If no fields are provided, send an error response
+
+    // If no fields are provided for updating, send an error response
     if (fieldsToUpdate.length === 0) {
         return res.status(400).send({ message: 'No fields to update' });
     }
 
-    // Add id and shop_code to the values array for the WHERE clause
+    // Add id and shop_code to the values array for the WHERE clause in the SQL query
     values.push(id, shop_code);
 
-    // Build the SQL query dynamically
+    // Build the SQL query dynamically based on the fields that are provided
     const updateSql = `UPDATE products_tb SET ${fieldsToUpdate.join(', ')} WHERE id = ? AND shop_code = ?`;
 
-    // Execute the query
+    // Execute the SQL query
     db.query(updateSql, values, (err, result) => {
         if (err) {
-            return res.status(500).send(err);
+            return res.status(500).send({ message: 'Database error during product update', error: err });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send({ message: 'Product not found or shop code mismatch' });
         }
 
         res.status(200).send({ message: 'Product updated successfully' });
