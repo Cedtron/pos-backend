@@ -40,6 +40,7 @@ exports.createProduct = async (req, res) => {
             db.query(insertSql, [RegNo, title, description, brand, price, costprice, color, productExpdate, stock, productUnit, productImages, category, productSubCategory, productBarcode, productLocation, shop_code], 
             (err, result) => {
                 if (err) {
+                    console.error("Product inst:", err);
                     return res.status(500).send({ message: 'Error inserting product', error: err });
                 }
 
@@ -162,6 +163,7 @@ exports.updateProducts = async (req, res) => {
     // Execute the SQL query
     db.query(updateSql, values, (err, result) => {
         if (err) {
+            console.log(err)
             return res.status(500).send({ message: 'Database error during product update', error: err });
         }
 
