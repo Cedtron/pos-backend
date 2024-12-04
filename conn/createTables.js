@@ -3,9 +3,13 @@ const pool = require('./db');
 const createCategoryNameTable = `
   CREATE TABLE IF NOT EXISTS category_name_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(10) NOT NULL,
     name VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -13,10 +17,14 @@ const createCategoryNameTable = `
 const createCategoryTable = `
   CREATE TABLE IF NOT EXISTS category_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     category VARCHAR(50) NOT NULL,
     sub_category VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -24,6 +32,7 @@ const createCategoryTable = `
 const createCompanyDetailsTable = `
   CREATE TABLE IF NOT EXISTS companydetails_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     shop_code VARCHAR(50) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
@@ -42,12 +51,16 @@ const createCompanyDetailsTable = `
 const createCustomerTable = `
   CREATE TABLE IF NOT EXISTS customer_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     name VARCHAR(50) NOT NULL,
     address TEXT NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     image TEXT,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -55,9 +68,13 @@ const createCustomerTable = `
 const createExpendCategoryTable = `
   CREATE TABLE IF NOT EXISTS expendcategory_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     name VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -65,12 +82,16 @@ const createExpendCategoryTable = `
 const createExpenseTable = `
   CREATE TABLE IF NOT EXISTS expense_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(20) NOT NULL,
     Reason VARCHAR(50) NOT NULL,
     Amount DECIMAL(10, 2) NOT NULL,
     Date DATE NOT NULL,
     Description VARCHAR(100) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -78,11 +99,15 @@ const createExpenseTable = `
 const createLogsTable = `
   CREATE TABLE IF NOT EXISTS logs_tb (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     username VARCHAR(50) NOT NULL,
     action TEXT NOT NULL,
     log_date DATETIME NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -90,6 +115,7 @@ const createLogsTable = `
 const createOrderTable = `
   CREATE TABLE IF NOT EXISTS order_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(50) NOT NULL,
     Product VARCHAR(50) NOT NULL,
     Unit VARCHAR(50) NOT NULL,
@@ -99,6 +125,9 @@ const createOrderTable = `
     TotalAmount DECIMAL(10, 2) NOT NULL,
     Date DATE NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -106,6 +135,7 @@ const createOrderTable = `
 const createProductsTable = `
  CREATE TABLE IF NOT EXISTS products_tb (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
   RegNo VARCHAR(50) NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
@@ -121,6 +151,9 @@ const createProductsTable = `
   bar_code TEXT,
   location VARCHAR(25),
   shop_code VARCHAR(50) NOT NULL,
+  sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
    images JSON,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -131,6 +164,7 @@ const createProductsTable = `
 const createSalesTable = `
   CREATE TABLE IF NOT EXISTS sales_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(50) NOT NULL,
     Product TEXT,
     Unit VARCHAR(50) NOT NULL,
@@ -142,6 +176,9 @@ const createSalesTable = `
     Date DATE NOT NULL,
     user VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -149,6 +186,7 @@ const createSalesTable = `
 const createStockTable = `
   CREATE TABLE IF NOT EXISTS stock_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     product_code VARCHAR(20) NOT NULL,
     quantity INT NOT NULL,
@@ -158,6 +196,9 @@ const createStockTable = `
     reason VARCHAR(255),
     user VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -165,12 +206,16 @@ const createStockTable = `
 const createSuppliersTable = `
   CREATE TABLE IF NOT EXISTS suppliers_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     supplier_name VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,
     contact_number VARCHAR(20) NOT NULL,
     contact_person VARCHAR(50) NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `; 
@@ -178,10 +223,14 @@ const createSuppliersTable = `
 const createUnitTable = `
   CREATE TABLE IF NOT EXISTS unit_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(15) NOT NULL,
     name VARCHAR(50) NOT NULL,
     description VARCHAR(255),
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -189,6 +238,7 @@ const createUnitTable = `
 const createUsersTable = `
   CREATE TABLE IF NOT EXISTS users_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(10) NOT NULL,
     Name VARCHAR(50) NOT NULL,
     Email VARCHAR(50),
@@ -199,6 +249,9 @@ const createUsersTable = `
     passhint VARCHAR(255),
     DOR DATE NOT NULL,
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
@@ -206,6 +259,7 @@ const createUsersTable = `
 const createRegTracker=`
 CREATE TABLE regno_tracker (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     table_name VARCHAR(50) NOT NULL UNIQUE,
     last_regno VARCHAR(10) NOT NULL
 );`
@@ -213,18 +267,76 @@ CREATE TABLE regno_tracker (
 const createDisplayTable = `
   CREATE TABLE IF NOT EXISTS display_tb (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE, -- For global uniqueness
     RegNo VARCHAR(50) NOT NULL,
     user VARCHAR(50) NOT NULL,
     nav VARCHAR(200) ,
     screen VARCHAR(200),
     shop_code VARCHAR(50) NOT NULL,
+    sync_status TINYINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(shop_code)
   )
 `;
 
 const insertSampleSignupData = `
-INSERT INTO users_tb (RegNo, Name, Email, image, Password, Status, Role, passhint, DOR, shop_code) 
-VALUES ('R001', 'John Doe', 'johndoe@gmail.com', 'path/to/image.jpg', 'password123', 'active', 'admin', 'dog', '2024-06-24', 'SHOP001')
+INSERT INTO users_tb (
+    uuid, 
+    RegNo, 
+    Name, 
+    Email, 
+    image, 
+    Password, 
+    Status, 
+    Role, 
+    passhint, 
+    DOR, 
+    shop_code, 
+    sync_status
+) 
+VALUES (
+    UUID(), 
+    'R001', 
+    'John Doe', 
+    'johndoe@gmail.com', 
+    'path/to/image.jpg', 
+    SHA2('password123', 256), -- Use SHA-256 for password hashing
+    'active', 
+    'admin', 
+    'dog', 
+    '2024-06-24', 
+    'SHOP001', 
+    0 -- Default sync_status
+);
+INSERT INTO users_tb (
+    uuid, 
+    RegNo, 
+    Name, 
+    Email, 
+    image, 
+    Password, 
+    Status, 
+    Role, 
+    passhint, 
+    DOR, 
+    shop_code, 
+    sync_status
+) 
+VALUES (
+    UUID(), 
+    'R001', 
+    'John Doe', 
+    'johndoe@gmail.com', 
+    'path/to/image.jpg', 
+    SHA2('password123', 256), 
+    'active', 
+    'admin', 
+    'dog', 
+    '2024-06-24', 
+    'SHOP001', 
+    0 -- Default sync_status
+);
 `;
 
 function createTables() {
