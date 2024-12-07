@@ -25,23 +25,44 @@ exports.createOrder = async (req, res) => {
     }
 };
 
-// Read all orders
 exports.getAllOrders = (req, res) => {
-    const sql = `SELECT * FROM order_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query; // Optional query parameter to filter by shop_code
+
+    let sql = `SELECT * FROM order_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
+            console.error("Error fetching orders:", err);
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
         res.status(200).json(results);
     });
 };
 
-// Read a single order by ID
+
 exports.getOrderById = (req, res) => {
     const { id } = req.params;
-    const sql = `SELECT * FROM order_tb WHERE id = ?`;
-    db.query(sql, [id], (err, results) => {
+    const { shop_code } = req.query; // Optional query parameter to filter by shop_code
+
+    let sql = `SELECT * FROM order_tb WHERE id = ?`;
+    const params = [id];
+
+    if (shop_code) {
+        sql += ` AND shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    db.query(sql, params, (err, results) => {
         if (err) {
+            console.error("Error fetching order:", err);
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
         if (results.length === 0) {
@@ -51,14 +72,27 @@ exports.getOrderById = (req, res) => {
     });
 };
 
-// Update an order by ID
+
 exports.updateOrder = (req, res) => {
     const { id } = req.params;
     const { Product, Unit, Quantity, Status, StandardAmount, TotalAmount, Date, shop_code } = req.body;
 
-    const sql = `UPDATE order_tb SET Product = ?, Unit = ?, Quantity = ?, Status = ?, StandardAmount = ?, TotalAmount = ?, Date = ?, shop_code = ? WHERE id = ?`;
-    db.query(sql, [Product, Unit, Quantity, Status, StandardAmount, TotalAmount, Date, shop_code, id], (err, result) => {
+    // Validate required fields
+    if (!Product || !Unit || !Quantity || !Status || !StandardAmount || !TotalAmount || !Date || !shop_code) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const sql = `
+        UPDATE order_tb 
+        SET Product = ?, Unit = ?, Quantity = ?, Status = ?, 
+            StandardAmount = ?, TotalAmount = ?, Date = ?, 
+            shop_code = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ? AND shop_code = ?
+    `;
+
+    db.query(sql, [Product, Unit, Quantity, Status, StandardAmount, TotalAmount, Date, shop_code, id, shop_code], (err, result) => {
         if (err) {
+            console.error("Error updating order:", err);
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
         if (result.affectedRows === 0) {
@@ -68,12 +102,19 @@ exports.updateOrder = (req, res) => {
     });
 };
 
-// Delete an order by ID
 exports.deleteOrder = (req, res) => {
     const { id } = req.params;
-    const sql = `DELETE FROM order_tb WHERE id = ?`;
-    db.query(sql, [id], (err, result) => {
+    const { shop_code } = req.query; // Ensure shop_code is provided
+
+    if (!shop_code) {
+        return res.status(400).json({ message: 'shop_code is required' });
+    }
+
+    const sql = `DELETE FROM order_tb WHERE id = ? AND shop_code = ?`;
+
+    db.query(sql, [id, shop_code], (err, result) => {
         if (err) {
+            console.error("Error deleting order:", err);
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
         if (result.affectedRows === 0) {

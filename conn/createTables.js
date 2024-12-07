@@ -308,36 +308,7 @@ VALUES (
     '2024-06-24', 
     'SHOP001', 
     0 -- Default sync_status
-);
-INSERT INTO users_tb (
-    uuid, 
-    RegNo, 
-    Name, 
-    Email, 
-    image, 
-    Password, 
-    Status, 
-    Role, 
-    passhint, 
-    DOR, 
-    shop_code, 
-    sync_status
-) 
-VALUES (
-    UUID(), 
-    'R001', 
-    'John Doe', 
-    'johndoe@gmail.com', 
-    'path/to/image.jpg', 
-    SHA2('password123', 256), 
-    'active', 
-    'admin', 
-    'dog', 
-    '2024-06-24', 
-    'SHOP001', 
-    0 -- Default sync_status
-);
-`;
+);`;
 
 function createTables() {
   pool.getConnection(async (err, connection) => {

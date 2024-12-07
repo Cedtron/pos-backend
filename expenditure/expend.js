@@ -1,6 +1,6 @@
 const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
-// Create a new expense entry
+// Create a new  expense entry
 
 exports.createExpenseEntry = async (req, res) => {
     const { expcategory, amount, date, description, shop_code } = req.body;
@@ -33,70 +33,96 @@ exports.createExpenseEntry = async (req, res) => {
 
 // Read all expense entries
 exports.getAllExpenseEntries = (req, res) => {
-    const sql = `SELECT * FROM expense_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query; // Get shop_code from query params
+
+    let sql = `SELECT * FROM expense_tb`;
+    const params = [];
+
+    // Filter by shop_code if provided
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
-          
-            return res.status(500).send({ message: 'Error retrieving expenses' });
+            console.error("Error retrieving expenses:", err);
+            return res.status(500).send({ message: "Error retrieving expenses" });
         }
-        res.status(200).send( results );
+        res.status(200).send(results);
     });
-  };
+};
 
 // Read a single expense entry by ID
 exports.getExpenseEntryById = (req, res) => {
     const { id } = req.params;
-    const sql = `SELECT * FROM expense_tb WHERE id = ?`;
-    db.query(sql, [id], (err, result) => {
+    const { shop_code } = req.query; // Get shop_code from query params
+
+    let sql = `SELECT * FROM expense_tb WHERE id = ?`;
+    const params = [id];
+
+    // Add shop_code filter if provided
+    if (shop_code) {
+        sql += ` AND shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    db.query(sql, params, (err, result) => {
         if (err) {
             console.error("Error fetching expense:", err);
-            return res.status(500).send({ message: 'Error retrieving expense entry' });
+            return res.status(500).send({ message: "Error retrieving expense entry" });
         }
         if (result.length === 0) {
-            return res.status(404).send({ message: 'Expense entry not found' });
+            return res.status(404).send({ message: "Expense entry not found" });
         }
-        res.status(200).send(result[0] );
+        res.status(200).send(result[0]);
     });
 };
-
 // Update an expense entry by ID
 exports.updateExpenseEntry = (req, res) => {
     const { id } = req.params;
-    const { expcategory, amount, date, description } = req.body;
+    const { expcategory, amount, date, description, shop_code } = req.body;
 
     // Validate input
-    if (!expcategory || !amount || !date || !description) {
-        return res.status(400).send({ message: 'All fields are required' });
+    if (!expcategory || !amount || !date || !description || !shop_code) {
+        return res.status(400).send({ message: "All fields are required" });
     }
 
-    // Map expcategory to Reason
     const Reason = expcategory;
 
-    const sql = `UPDATE expense_tb SET Reason = ?, Amount = ?, Date = ?, Description = ? WHERE id = ?`;
-    db.query(sql, [Reason, amount, date, description, id], (err, result) => {
+    const sql = `
+        UPDATE expense_tb 
+        SET Reason = ?, Amount = ?, Date = ?, Description = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ? AND shop_code = ?
+    `;
+    db.query(sql, [Reason, amount, date, description, id, shop_code], (err, result) => {
         if (err) {
-            //console.error("Error updating expense:", err);
-            return res.status(500).send({ message: 'Error updating expense entry' });
+            console.error("Error updating expense:", err);
+            return res.status(500).send({ message: "Error updating expense entry" });
         }
         if (result.affectedRows === 0) {
-            return res.status(404).send({ message: 'Expense entry not found' });
+            return res.status(404).send({ message: "Expense entry not found" });
         }
-        res.status(200).send({ message: 'Expense entry updated successfully' });
+        res.status(200).send({ message: "Expense entry updated successfully" });
     });
 };
 
 // Delete an expense entry by ID
 exports.deleteExpenseEntry = (req, res) => {
     const { id } = req.params;
-    const sql = `DELETE FROM expense_tb WHERE id = ?`;
-    db.query(sql, [id], (err, result) => {
+    const { shop_code } = req.query; // Get shop_code from query params
+
+    const sql = `DELETE FROM expense_tb WHERE id = ? AND shop_code = ?`;
+    db.query(sql, [id, shop_code], (err, result) => {
         if (err) {
             console.error("Error deleting expense:", err);
-            return res.status(500).send({ message: 'Error deleting expense entry' });
+            return res.status(500).send({ message: "Error deleting expense entry" });
         }
         if (result.affectedRows === 0) {
-            return res.status(404).send({ message: 'Expense entry not found' });
+            return res.status(404).send({ message: "Expense entry not found" });
         }
-        res.status(200).send({ message: 'Expense entry deleted successfully' });
+        res.status(200).send({ message: "Expense entry deleted successfully" });
     });
 };

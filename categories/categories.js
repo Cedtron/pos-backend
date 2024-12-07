@@ -1,27 +1,28 @@
+const { v4: uuidv4 } = require('uuid'); // For UUID generation
 const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
 
-// Create a new category
 exports.createCategory = async (req, res) => {
     const { name, shop_code } = req.body;
 
     try {
-        const checkSql = `SELECT * FROM category_name_tb WHERE name = ?`;
-        db.query(checkSql, [name], async (err, results) => {
+        const checkSql = `SELECT * FROM category_name_tb WHERE name = ? AND shop_code = ?`;
+        db.query(checkSql, [name, shop_code], async (err, results) => {
             if (err) {
                 console.error('Database error:', err);
                 return res.status(500).json({ message: 'Server error', error: err });
             }
 
             if (results.length > 0) {
-                return res.status(400).json({ message: 'Category already exists' });
+                return res.status(400).json({ message: 'Category already exists for this shop' });
             }
 
             // Generate a new RegNo for the category
-            const regNo = await generateRegNo('C','category_name_tb');
+            const regNo = await generateRegNo('C', 'category_name_tb');
+            const uuid = uuidv4(); // Generate a UUID for global uniqueness
 
-            const insertSql = `INSERT INTO category_name_tb (RegNo, name, shop_code) VALUES (?,?,?)`;
-            db.query(insertSql, [regNo, name, shop_code], (err, result) => {
+            const insertSql = `INSERT INTO category_name_tb (uuid, RegNo, name, shop_code, sync_status) VALUES (?, ?, ?, ?, ?)`;
+            db.query(insertSql, [uuid, regNo, name, shop_code, 0], (err, result) => {
                 if (err) {
                     console.error('Database error:', err);
                     return res.status(500).json({ message: 'Server error', error: err });
@@ -35,10 +36,23 @@ exports.createCategory = async (req, res) => {
     }
 };
 
+
 // Get all categories
 exports.getAllCategories = (req, res) => {
-    const sql = 'SELECT * FROM category_name_tb ORDER BY id DESC';
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query; // Get shop_code from query params
+
+    let sql = 'SELECT * FROM category_name_tb';
+    const params = [];
+
+    // Filter by shop_code if provided
+    if (shop_code) {
+        sql += ' WHERE shop_code = ?';
+        params.push(shop_code);
+    }
+
+    sql += ' ORDER BY id DESC';
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ message: 'Server error', error: err });
@@ -50,8 +64,18 @@ exports.getAllCategories = (req, res) => {
 // Get a single category by ID
 exports.getCategoryById = (req, res) => {
     const { id } = req.params;
-    const sql = 'SELECT * FROM category_name_tb WHERE id = ?';
-    db.query(sql, [id], (err, result) => {
+    const { shop_code } = req.query; // Get shop_code from query params
+
+    let sql = 'SELECT * FROM category_name_tb WHERE id = ?';
+    const params = [id];
+
+    // Add shop_code filter if provided
+    if (shop_code) {
+        sql += ' AND shop_code = ?';
+        params.push(shop_code);
+    }
+
+    db.query(sql, params, (err, result) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ message: 'Server error', error: err });
@@ -66,21 +90,21 @@ exports.getCategoryById = (req, res) => {
 // Update a category
 exports.updateCategory = (req, res) => {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, shop_code } = req.body;
 
-    const checkSql = `SELECT * FROM category_name_tb WHERE name = ? AND id != ?`;
-    db.query(checkSql, [name, id], (err, results) => {
+    const checkSql = `SELECT * FROM category_name_tb WHERE name = ? AND shop_code = ? AND id != ?`;
+    db.query(checkSql, [name, shop_code, id], (err, results) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ message: 'Server error', error: err });
         }
 
         if (results.length > 0) {
-            return res.status(400).json({ message: 'Category already exists' });
+            return res.status(400).json({ message: 'Category already exists in this shop' });
         }
 
-        const updateSql = `UPDATE category_name_tb SET name = ? WHERE id = ?`;
-        db.query(updateSql, [name, id], (err) => {
+        const updateSql = `UPDATE category_name_tb SET name = ? WHERE id = ? AND shop_code = ?`;
+        db.query(updateSql, [name, id, shop_code], (err) => {
             if (err) {
                 console.error('Database error:', err);
                 return res.status(500).json({ message: 'Server error', error: err });
@@ -93,8 +117,10 @@ exports.updateCategory = (req, res) => {
 // Delete a category
 exports.deleteCategory = (req, res) => {
     const { id } = req.params;
-    const deleteSql = 'DELETE FROM category_name_tb WHERE id = ?';
-    db.query(deleteSql, [id], (err) => {
+    const { shop_code } = req.query; // Get shop_code from query params
+
+    const deleteSql = 'DELETE FROM category_name_tb WHERE id = ? AND shop_code = ?';
+    db.query(deleteSql, [id, shop_code], (err) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ message: 'Server error', error: err });

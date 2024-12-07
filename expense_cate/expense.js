@@ -34,23 +34,43 @@ exports.createCategory = async (req, res) => {
   });
 };
 
-// Get all categories
 exports.getAllCategories = (req, res) => {
-  const query = 'SELECT * FROM expendcategory_tb ORDER BY id DESC';
-  db.query(query, (err, results) => {
+  const { shop_code } = req.query; // Filter by shop_code if provided
+
+  let query = 'SELECT * FROM expendcategory_tb';
+  const params = [];
+
+  if (shop_code) {
+    query += ' WHERE shop_code = ?';
+    params.push(shop_code);
+  }
+
+  query += ' ORDER BY id DESC';
+
+  db.query(query, params, (err, results) => {
     if (err) {
+      console.error("Error fetching categories:", err);
       return res.status(500).json({ message: 'Database error', error: err.message });
     }
     res.status(200).json(results);
   });
 };
 
-// Get a single category by ID
 exports.getCategoryById = (req, res) => {
   const { id } = req.params;
-  const query = 'SELECT * FROM expendcategory_tb WHERE id = ?';
-  db.query(query, [id], (err, results) => {
+  const { shop_code } = req.query; // Filter by shop_code if provided
+
+  let query = 'SELECT * FROM expendcategory_tb WHERE id = ?';
+  const params = [id];
+
+  if (shop_code) {
+    query += ' AND shop_code = ?';
+    params.push(shop_code);
+  }
+
+  db.query(query, params, (err, results) => {
     if (err) {
+      console.error("Error fetching category:", err);
       return res.status(500).json({ message: 'Database error', error: err.message });
     }
     if (results.length === 0) {
@@ -60,15 +80,22 @@ exports.getCategoryById = (req, res) => {
   });
 };
 
-// Update a category by ID
 exports.updateCategoryById = (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name, shop_code } = req.body;
 
-  // Check if the new name already exists
-  const checkQuery = 'SELECT * FROM expendcategory_tb WHERE name = ? AND id != ?';
-  db.query(checkQuery, [name, id], (err, results) => {
+  if (!name || !shop_code) {
+    return res.status(400).json({ message: 'Name and shop_code are required' });
+  }
+
+  // Check if the new name already exists for this shop_code
+  const checkQuery = `
+    SELECT * FROM expendcategory_tb 
+    WHERE name = ? AND id != ? AND shop_code = ?
+  `;
+  db.query(checkQuery, [name, id, shop_code], (err, results) => {
     if (err) {
+      console.error("Error checking category name:", err);
       return res.status(500).json({ message: 'Database error', error: err.message });
     }
 
@@ -77,9 +104,14 @@ exports.updateCategoryById = (req, res) => {
     }
 
     // Update the category
-    const updateQuery = 'UPDATE expendcategory_tb SET name = ? WHERE id = ?';
-    db.query(updateQuery, [name, id], (err, results) => {
+    const updateQuery = `
+      UPDATE expendcategory_tb 
+      SET name = ?, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ? AND shop_code = ?
+    `;
+    db.query(updateQuery, [name, id, shop_code], (err, results) => {
       if (err) {
+        console.error("Error updating category:", err);
         return res.status(500).json({ message: 'Database error', error: err.message });
       }
       if (results.affectedRows === 0) {
@@ -90,12 +122,18 @@ exports.updateCategoryById = (req, res) => {
   });
 };
 
-// Delete a category by ID
 exports.deleteCategoryById = (req, res) => {
   const { id } = req.params;
-  const query = 'DELETE FROM expendcategory_tb WHERE id = ?';
-  db.query(query, [id], (err, results) => {
+  const { shop_code } = req.query; // Ensure shop_code is passed in the query
+
+  if (!shop_code) {
+    return res.status(400).json({ message: 'shop_code is required' });
+  }
+
+  const query = 'DELETE FROM expendcategory_tb WHERE id = ? AND shop_code = ?';
+  db.query(query, [id, shop_code], (err, results) => {
     if (err) {
+      console.error("Error deleting category:", err);
       return res.status(500).json({ message: 'Database error', error: err.message });
     }
     if (results.affectedRows === 0) {

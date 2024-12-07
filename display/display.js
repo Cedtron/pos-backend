@@ -1,25 +1,23 @@
 const db = require('../conn/db');
 const generateRegNo = require('../conn/reg');
+const { v4: uuidv4 } = require('uuid'); // For UUID generation
 
 // Create a new display entry
 exports.createDisplay = async (req, res) => {
-    const { nav, shop_code } = req.body; // Get nav and shop_code from the request body
-    const screen = ''; // Set screen to blank as per your requirement
-    const user = req.body.RegNo; // Use RegNo from the frontend to align it as the 'user'
+    const { nav, shop_code } = req.body;
+    const screen = req.body.screen || ''; // Default blank screen
+    const user = req.body.RegNo; // Use RegNo from frontend
 
     if (!user || !nav || !shop_code) {
         return res.status(400).json({ message: 'User (RegNo), nav, and shop code are required' });
     }
 
     try {
-        // Generate a unique RegNo for the display entry
         const RegNo = await generateRegNo('D', 'display_tb');
+        const uuid = uuidv4(); // Generate UUID
 
-        // Prepare SQL for inserting the display entry
-        const insertSql = `INSERT INTO display_tb (RegNo, user, nav, screen, shop_code) VALUES (?, ?, ?, ?, ?)`;
-
-        // Execute the query to insert the display entry into the database
-        db.query(insertSql, [RegNo, user, JSON.stringify(nav), screen, shop_code], (err, result) => {
+        const insertSql = `INSERT INTO display_tb (uuid, RegNo, user, nav, screen, shop_code) VALUES (?, ?, ?, ?, ?, ?)`;
+        db.query(insertSql, [uuid, RegNo, user, JSON.stringify(nav), screen, shop_code], (err, result) => {
             if (err) {
                 return res.status(500).json({ message: 'Error inserting display entry', error: err.message });
             }
@@ -30,10 +28,15 @@ exports.createDisplay = async (req, res) => {
     }
 };
 
-// Get all display entries
+// Fetch all display entries for a shop
 exports.getDisplays = (req, res) => {
-    const selectSql = `SELECT * FROM display_tb`;
-    db.query(selectSql, (err, results) => {
+    const { shop_code } = req.query;
+    if (!shop_code) {
+        return res.status(400).json({ message: 'Shop code is required' });
+    }
+
+    const selectSql = `SELECT * FROM display_tb WHERE shop_code = ? ORDER BY id DESC`;
+    db.query(selectSql, [shop_code], (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
@@ -41,21 +44,15 @@ exports.getDisplays = (req, res) => {
     });
 };
 
-// Get a single display entry by ID
+// Fetch a single display entry by user (RegNo)
 exports.getDisplayById = (req, res) => {
-    const { regno } = req.params; // Ensure this matches your route parameter
+    const { regno } = req.params;
     const selectSql = `SELECT * FROM display_tb WHERE user = ?`;
-
-    console.log('Fetching display for RegNo:', regno); // Log the RegNo being searched
 
     db.query(selectSql, [regno], (err, results) => {
         if (err) {
-            console.error('Database error:', err.message); // Log the error
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
-
-       
-
         if (results.length === 0) {
             return res.status(404).json({ message: 'Display entry not found' });
         }
@@ -63,54 +60,30 @@ exports.getDisplayById = (req, res) => {
     });
 };
 
-// Update a display entry by ID
+// Update display entry by user (RegNo)
 exports.updateDisplay = (req, res) => {
-    const { regno } = req.params; 
-    const {  nav } = req.body;
-const user = regno
-    // Check if at least one field is provided
-    if (!user && !nav) {
-        return res.status(400).json({ message: 'At least one field (user or nav) must be provided' });
+    const { regno } = req.params;
+    const { nav } = req.body;
+    const user = regno;
+
+    if (!nav) {
+        return res.status(400).json({ message: 'Nav must be provided' });
     }
 
-    // First, retrieve the current nav value
     const selectSql = `SELECT nav FROM display_tb WHERE user = ?`;
-    db.query(selectSql, [regno], (selectErr, selectResult) => {
-        if (selectErr) {
-            return res.status(500).json({ message: 'Error retrieving display entry', error: selectErr.message });
+    db.query(selectSql, [regno], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error retrieving display entry', error: err.message });
         }
-        if (selectResult.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({ message: 'Display entry not found' });
         }
 
-        // Parse the existing nav data
-        let existingNav = JSON.parse(selectResult[0].nav);
+        const existingNav = JSON.parse(result[0].nav || '{}');
+        const updatedNav = { ...existingNav, ...nav };
 
-        // Update the existing nav with the new values
-        if (nav) {
-            existingNav = { ...existingNav, ...nav }; // Merge new nav values
-        }
-
-        // Prepare the SQL update statement
-        let updateFields = [];
-        let values = [];
-
-        if (user) {
-            updateFields.push('user = ?');
-            values.push(user);
-        }
-
-        // Update the nav field
-        updateFields.push('nav = ?');
-        values.push(JSON.stringify(existingNav)); // Convert updated nav object back to JSON string
-
-        // Add the regno to the values array for the WHERE clause
-        values.push(regno);
-
-        // Construct the update SQL query
-        const updateSql = `UPDATE display_tb SET ${updateFields.join(', ')} WHERE user = ?`;
-
-        db.query(updateSql, values, (updateErr, updateResult) => {
+        const updateSql = `UPDATE display_tb SET nav = ?, sync_status = 0 WHERE user = ?`;
+        db.query(updateSql, [JSON.stringify(updatedNav), user], (updateErr) => {
             if (updateErr) {
                 return res.status(500).json({ message: 'Error updating display entry', error: updateErr.message });
             }
@@ -119,11 +92,11 @@ const user = regno
     });
 };
 
-
-// Delete a display entry by ID
+// Delete a display entry by ID (soft delete)
 exports.deleteDisplay = (req, res) => {
     const { id } = req.params;
-    const deleteSql = `DELETE FROM display_tb WHERE id = ?`;
+    const deleteSql = `UPDATE display_tb SET deleted_at = CURRENT_TIMESTAMP, sync_status = 0 WHERE id = ?`;
+
     db.query(deleteSql, [id], (err, result) => {
         if (err) {
             return res.status(500).json({ message: 'Error deleting display entry', error: err.message });
