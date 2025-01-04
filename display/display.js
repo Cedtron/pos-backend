@@ -12,18 +12,30 @@ exports.createDisplay = async (req, res) => {
     }
 
     try {
-        // Generate a unique RegNo for the display entry
-        const RegNo = await generateRegNo('D', 'display_tb');
-
-        // Prepare SQL for inserting the display entry
-        const insertSql = `INSERT INTO display_tb (RegNo, user, nav, screen, shop_code) VALUES (?, ?, ?, ?, ?)`;
-
-        // Execute the query to insert the display entry into the database
-        db.query(insertSql, [RegNo, user, JSON.stringify(nav), screen, shop_code], (err, result) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error inserting display entry', error: err.message });
+        // Check if the user already exists in the table
+        const checkUserSql = `SELECT * FROM display_tb WHERE user = ?`;
+        db.query(checkUserSql, [user], async (checkErr, checkResult) => {
+            if (checkErr) {
+                return res.status(500).json({ message: 'Error checking user', error: checkErr.message });
             }
-            res.status(201).json({ message: 'Display entry created successfully', id: result.insertId });
+
+            if (checkResult.length > 0) {
+                return res.status(400).json({ message: 'User already exists' });
+            }
+
+            // Generate a unique RegNo for the display entry
+            const RegNo = await generateRegNo('D', 'display_tb');
+
+            // Prepare SQL for inserting the display entry
+            const insertSql = `INSERT INTO display_tb (RegNo, user, nav, screen, shop_code) VALUES (?, ?, ?, ?, ?)`;
+
+            // Execute the query to insert the display entry into the database
+            db.query(insertSql, [RegNo, user, JSON.stringify(nav), screen, shop_code], (err, result) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Error inserting display entry', error: err.message });
+                }
+                res.status(201).json({ message: 'Display entry created successfully', id: result.insertId });
+            });
         });
     } catch (error) {
         res.status(500).json({ message: 'Error generating RegNo', error });
