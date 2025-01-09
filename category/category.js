@@ -7,8 +7,8 @@ exports.createCategory = async (req, res) => {
 
     try {
         // Check if the category already exists
-        const checkSql = `SELECT * FROM category_tb WHERE category = ? AND sub_category = ?`;
-        db.query(checkSql, [category, subCategory], async (err, results) => {
+        const checkSql = `SELECT * FROM category_tb WHERE category = ? AND sub_category = ? AND shop_code = ?`;
+        db.query(checkSql, [category, subCategory, shop_code], async (err, results) => {
             if (err) {
                 return res.status(500).send(err);
             }
@@ -35,10 +35,19 @@ exports.createCategory = async (req, res) => {
     }
 };
 
-// Read all categories
 exports.getAllCategories = (req, res) => {
-    const sql = `SELECT * FROM category_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = `SELECT * FROM category_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             return res.status(500).send(err);
         }

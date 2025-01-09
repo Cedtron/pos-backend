@@ -235,19 +235,19 @@ const createSubscriptionTable = `
   )
 `;
 
-const createSubscriptionLogTable = `
-  CREATE TABLE IF NOT EXISTS subscription_log_tb (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    RegNo VARCHAR(15) NOT NULL, 
-    action VARCHAR(50) NOT NULL,
-    action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    old_data JSON,
-    new_data JSON,
-    shop_code VARCHAR(50) NOT NULL,
-    FOREIGN KEY (subscription_id) REFERENCES subscription_tb(id),
-    INDEX(shop_code)
-  )
-`;
+// const createSubscriptionLogTable = `
+//   CREATE TABLE IF NOT EXISTS subscription_log_tb (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     RegNo VARCHAR(15) NOT NULL, 
+//     action VARCHAR(50) NOT NULL,
+//     action_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//     old_data JSON,
+//     new_data JSON,
+//     shop_code VARCHAR(50) NOT NULL,
+//     FOREIGN KEY (subscription_id) REFERENCES subscription_tb(id),
+//     INDEX(shop_code)
+//   )
+// `;
 
 const insertSampleSignupData = `
 INSERT INTO users_tb (RegNo, Name, Email, image, Password, Status, Role, passhint, DOR, shop_code) 
@@ -279,7 +279,7 @@ function createTables() {
         { name: 'users_tb', createQuery: createUsersTable },
         { name: 'display_tb', createQuery: createDisplayTable },
         { name: 'subscription_tb', createQuery: createSubscriptionTable },
-        { name: 'subscription_log_tb', createQuery: createSubscriptionLogTable },
+        // { name: 'subscription_log_tb', createQuery: createSubscriptionLogTable },
         { name: 'regno_tracker', createQuery: createRegTracker }
       ];
 

@@ -11,8 +11,9 @@ exports.createCustomer = async (req, res) => {
 
     try {
         // Check if customer with the same name already exists
-        const checkSql = `SELECT id FROM customer_tb WHERE name = ?`;
-        db.query(checkSql, [name], async (err, results) => {
+        const checkSql = `SELECT id FROM customer_tb WHERE name = ? AND shop_code = ?`;
+    db.query(checkSql, [name, shop_code], async (err, results) => {
+       
             if (err) {
                 return res.status(500).json({ message: 'Database error', error: err.message });
             }

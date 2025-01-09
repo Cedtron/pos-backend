@@ -27,8 +27,18 @@ exports.createOrder = async (req, res) => {
 
 // Read all orders
 exports.getAllOrders = (req, res) => {
-    const sql = `SELECT * FROM order_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = `SELECT * FROM order_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }

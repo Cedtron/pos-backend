@@ -9,9 +9,9 @@ exports.createSupplier = async (req, res) => {
     }
 
     // Check if the supplier already exists
-    const checkSql = `SELECT * FROM suppliers_tb WHERE supplier_name = ?`;
-    db.query(checkSql, [supplier_name], async (err, results) => {
-        if (err) {
+    const checkSql = `SELECT * FROM suppliers_tb WHERE supplier_name = ? AND shop_code = ?`;
+    db.query(checkSql, [supplier_name, shop_code], async (err, results) => {
+       if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
 
@@ -39,8 +39,18 @@ exports.createSupplier = async (req, res) => {
 
 // Read all suppliers
 exports.getAllSuppliers = (req, res) => {
-    const sql = `SELECT * FROM suppliers_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = `SELECT * FROM suppliers_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }

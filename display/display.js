@@ -13,9 +13,9 @@ exports.createDisplay = async (req, res) => {
 
     try {
         // Check if the user already exists in the table
-        const checkUserSql = `SELECT * FROM display_tb WHERE user = ?`;
-        db.query(checkUserSql, [user], async (checkErr, checkResult) => {
-            if (checkErr) {
+        const checkUserSql = `SELECT * FROM display_tb WHERE user = ? AND shop_code = ?`;
+        db.query(checkUserSql, [user, shop_code], async (checkErr, checkResult) => {
+          if (checkErr) {
                 return res.status(500).json({ message: 'Error checking user', error: checkErr.message });
             }
 
@@ -42,10 +42,17 @@ exports.createDisplay = async (req, res) => {
     }
 };
 
-// Get all display entries
 exports.getDisplays = (req, res) => {
-    const selectSql = `SELECT * FROM display_tb`;
-    db.query(selectSql, (err, results) => {
+    const { shop_code } = req.query;
+    let selectSql = `SELECT * FROM display_tb`;
+    const params = [];
+
+    if (shop_code) {
+        selectSql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    db.query(selectSql, params, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
@@ -55,12 +62,12 @@ exports.getDisplays = (req, res) => {
 
 // Get a single display entry by ID
 exports.getDisplayById = (req, res) => {
-    const { regno } = req.params; // Ensure this matches your route parameter
-    const selectSql = `SELECT * FROM display_tb WHERE user = ?`;
-
-    console.log('Fetching display for RegNo:', regno); // Log the RegNo being searched
-
-    db.query(selectSql, [regno], (err, results) => {
+    const { regno, shop_code } = req.params; // Ensure this matches your route parameters
+    const selectSql = `SELECT * FROM display_tb WHERE user = ? AND shop_code = ?`;
+    
+    console.log('Fetching display for RegNo:', regno, 'and shop_code:', shop_code);
+    
+    db.query(selectSql, [regno, shop_code], (err, results) => {
         if (err) {
             console.error('Database error:', err.message); // Log the error
             return res.status(500).json({ message: 'Database error', error: err.message });

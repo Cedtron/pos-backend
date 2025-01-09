@@ -6,8 +6,8 @@ exports.createCategory = async (req, res) => {
     const { name, shop_code } = req.body;
 
     try {
-        const checkSql = `SELECT * FROM category_name_tb WHERE name = ?`;
-        db.query(checkSql, [name], async (err, results) => {
+        const checkSql = `SELECT * FROM category_name_tb WHERE name = ? AND shop_code = ?`;
+        db.query(checkSql, [name, shop_code], async (err, results) => {
             if (err) {
                 console.error('Database error:', err);
                 return res.status(500).json({ message: 'Server error', error: err });
@@ -37,8 +37,18 @@ exports.createCategory = async (req, res) => {
 
 // Get all categories
 exports.getAllCategories = (req, res) => {
-    const sql = 'SELECT * FROM category_name_tb ORDER BY id DESC';
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = 'SELECT * FROM category_name_tb';
+    const params = [];
+
+    if (shop_code) {
+        sql += ' WHERE shop_code = ?';
+        params.push(shop_code);
+    }
+
+    sql += ' ORDER BY id DESC';
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ message: 'Server error', error: err });

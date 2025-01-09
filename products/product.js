@@ -57,8 +57,18 @@ exports.createProduct = async (req, res) => {
 
 // Read all products
 exports.getAllProducts = (req, res) => {
-    const sql = `SELECT * FROM products_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = `SELECT * FROM products_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             return res.status(500).send(err);
         }

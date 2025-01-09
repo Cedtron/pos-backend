@@ -5,9 +5,9 @@ exports.createCategory = async (req, res) => {
   const { name , shop_code} = req.body;
 
   // Check if the category already exists
-  const checkQuery = 'SELECT * FROM expendcategory_tb WHERE name = ?';
-  db.query(checkQuery, [name], async (err, results) => {
-    if (err) {
+  const checkQuery = 'SELECT * FROM expendcategory_tb WHERE name = ? AND shop_code = ?';
+  db.query(checkQuery, [name, shop_code], async (err, results) => {
+       if (err) {
       return res.status(500).json({ message: 'Database error', error: err.message });
     }
 

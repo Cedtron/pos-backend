@@ -4,11 +4,12 @@ const generateRegNo = require('../conn/reg');
 
 // Create a new user entry
 exports.createSignup = async (req, res) => {
-    const { Name, Email, Password, passhint,Status, Role, company_name } = req.body; // Include company_name
+    const { Name, Email, Password, passhint, Status, Role, company_name } = req.body; // Include company_name
 
-    const Statu = Status || 'inactive';
+    // Set Status based on Role
+    const Statu = Role === 'admin' ? 'active' : 'inactive';
     const localDate = new Date().toISOString().slice(0, 19).replace('T', ' '); // Local date in YYYY-MM-DD HH:MM:SS format
-
+ 
     try {
         // Step 1: Check if the email exists
         const emailCheckSql = 'SELECT Email FROM users_tb WHERE Email = ?';
@@ -99,8 +100,18 @@ exports.createSignup = async (req, res) => {
 
 // Read all users
 exports.getAllSignups = (req, res) => {
-    const sql = `SELECT * FROM users_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = `SELECT * FROM users_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             return res.status(500).send(err);
         }

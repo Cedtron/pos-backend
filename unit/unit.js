@@ -9,9 +9,9 @@ exports.createUnit = async (req, res) => {
     }
 
     // Check if the unit already exists
-    const checkSql = `SELECT * FROM unit_tb WHERE name = ?`;
-    db.query(checkSql, [name], async (err, results) => {
-        if (err) {
+    const checkSql = `SELECT * FROM unit_tb WHERE name = ? AND shop_code = ?`;
+    db.query(checkSql, [name, shop_code], async (err, results) => {
+         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
 
@@ -39,8 +39,18 @@ exports.createUnit = async (req, res) => {
 
 // Read all units
 exports.getAllUnits = (req, res) => {
-    const sql = `SELECT * FROM unit_tb ORDER BY id DESC`;
-    db.query(sql, (err, results) => {
+    const { shop_code } = req.query;
+    let sql = `SELECT * FROM unit_tb`;
+    const params = [];
+
+    if (shop_code) {
+        sql += ` WHERE shop_code = ?`;
+        params.push(shop_code);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.query(sql, params, (err, results) => {
         if (err) {
             return res.status(500).json({ message: 'Database error', error: err.message });
         }
