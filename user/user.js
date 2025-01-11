@@ -27,7 +27,7 @@ exports.createSignup = async (req, res) => {
 
                 if (company_name) {
                     // If company_name is provided, query by company_name
-                    shopCodeSql = 'SELECT shop_code FROM companydetails_tb WHERE company_name = ?';
+                    shopCodeSql = 'SELECT shop_code FROM companydetails_tb WHERE shop_code = ?';
                     params = [company_name];
                 } else {
                     // If company_name is null, get the first shop_code from companydetails_tb
