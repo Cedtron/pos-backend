@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const signupController = require('./user');
+const upload = require('../middleware/upload');
 
 // Create a new signup entry
-router.post('/signup', signupController.createSignup);
+router.post('/signup', upload.single('image'), signupController.createSignup);
 
 // Read all signup entries
 router.get('/users', signupController.getAllSignups);
