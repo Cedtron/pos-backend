@@ -235,6 +235,22 @@ const createSubscriptionTable = `
   )
 `;
 
+const createDeliveryTable=`
+CREATE TABLE IF NOT EXISTS delivery_tracking (
+    delivery_regno VARCHAR(50) PRIMARY KEY,  
+    source_regno VARCHAR(50) NOT NULL,    
+    source_type ENUM('POS', 'E-Commerce') NOT NULL,  
+    tracking_number VARCHAR(100),        
+    status ENUM('Processing', 'Packed', 'Shipped', 'Delivered', 'Failed') DEFAULT 'Processing',
+    estimated_delivery DATE,
+    actual_delivery DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX(source_regno),                    
+    INDEX(tracking_number)    
+    )
+`
+
 // const createSubscriptionLogTable = `
 //   CREATE TABLE IF NOT EXISTS subscription_log_tb (
 //     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -279,6 +295,7 @@ function createTables() {
         { name: 'users_tb', createQuery: createUsersTable },
         { name: 'display_tb', createQuery: createDisplayTable },
         { name: 'subscription_tb', createQuery: createSubscriptionTable },
+        { name: 'delivery_tb', createQuery: createDeliveryTable },
         // { name: 'subscription_log_tb', createQuery: createSubscriptionLogTable },
         { name: 'regno_tracker', createQuery: createRegTracker }
       ];

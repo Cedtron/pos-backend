@@ -141,76 +141,66 @@ exports.getSignupById = (req, res) => {
 
 // Update a user entry by ID
 exports.updateSignup = async (req, res) => {
-    const { id } = req.params;
-    const { RegNo, Name, Email, Password, confirmPassword, Status, Role, passhint, DOR ,file} = req.body;
+  const { id } = req.params;
+  const { RegNo, Name, Email, Password, confirmPassword, Status, Role, passhint, DOR } = req.body;
+  const image = req.file;
 
-    // Check if passwords match only if Password is provided
-    if (Password && Password !== confirmPassword) {
-        return res.status(400).send({ message: 'Passwords do not match' });
+  if (Password && Password !== confirmPassword) {
+    return res.status(400).json({ message: 'Passwords do not match' });
+  }
+
+  try {
+    const getUserSql = 'SELECT image FROM users_tb WHERE id = ?';
+    const userResult = await db.query(getUserSql, [id]);
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    try {
-        let updates = [];
-        let values = [];
+    const oldImagePath = userResult[0].image;
+    let updates = [];
+    let values = [];
 
-        // Check if each field is present and prepare the update statement accordingly
-        if (RegNo) {
-            updates.push('RegNo = ?');
-            values.push(RegNo);
-        }
-        if (Name) {
-            updates.push('Name = ?');
-            values.push(Name);
-        }
-        if (Email) {
-            updates.push('Email = ?');
-            values.push(Email);
-        }
-        if (Password) {
-            const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(Password, saltRounds);
-            updates.push('Password = ?');
-            values.push(hashedPassword);
-        }
-        if (Status) {
-            updates.push('Status = ?');
-            values.push(Status);
-        }
-        if (Role) {
-            updates.push('Role = ?');
-            values.push(Role);
-        }
-        if (passhint) {
-            updates.push('passhint = ?');
-            values.push(passhint);
-        }
-        if (DOR) {
-            updates.push('DOR = ?');
-            values.push(DOR);
-        }
-
-        // If no updates were made, return a 400 response
-        if (updates.length === 0) {
-            return res.status(400).send({ message: 'No fields to update' });
-        }
-
-        // Construct the SQL query
-        const sql = `UPDATE users_tb SET ${updates.join(', ')} WHERE id = ?`;
-        values.push(id); // Add id to the values
-
-        // Execute the update query
-        db.query(sql, values, (err, result) => {
-            if (err) {
-                return res.status(500).send(err);
-            }
-            if (result.affectedRows === 0) {
-                return res.status(404).send({ message: 'User not found' });
-            }
-            res.status(200).send({ message: 'User updated successfully' });
-        });
-    } catch (err) {
-        return res.status(500).send(err);
+    if (RegNo) updates.push('RegNo = ?'), values.push(RegNo);
+    if (Name) updates.push('Name = ?'), values.push(Name);
+    if (Email) updates.push('Email = ?'), values.push(Email);
+    if (Password) {
+      const hashedPassword = await bcrypt.hash(Password, 10);
+      updates.push('Password = ?'), values.push(hashedPassword);
     }
+    if (Status) updates.push('Status = ?'), values.push(Status);
+    if (Role) updates.push('Role = ?'), values.push(Role);
+    if (passhint) updates.push('passhint = ?'), values.push(passhint);
+    if (DOR) updates.push('DOR = ?'), values.push(DOR);
+    if (image) {
+      if (oldImagePath) {
+        const fullPath = path.join(__dirname, '..', oldImagePath);
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      }
+      const newImagePath = await saveFile(image);
+      updates.push('image = ?'), values.push(newImagePath);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+
+    const sql = `UPDATE users_tb SET ${updates.join(', ')} WHERE id = ?`;
+    values.push(id);
+
+    const result = await db.query(sql, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User updated successfully' });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ message: 'Internal server error', error: err.message });
+  }
 };
 
 // Delete a user by ID
@@ -229,22 +219,25 @@ exports.deleteSignup = (req, res) => {
 };
 
 
-exports.updateUserStatus = (req, res) => {
-    const { id } = req.params;
-    const { Status } = req.body; // Expect Status in the request body
-    
-    // SQL query to update only the Status field
-    const sql = `UPDATE users_tb SET Status = ? WHERE id = ?`;
+exports.updateUserStatus = async (req, res) => {
+  const { id } = req.params;
+  const { Status } = req.body;
 
-    db.query(sql, [Status, id], (err, result) => {
-        if (err) {
-            return res.status(500).send({ message: 'Error updating status', error: err });
-        }
+  if (!Status) {
+    return res.status(400).json({ message: 'Status is required' });
+  }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).send({ message: 'User not found' });
-        }
+  try {
+    const sql = 'UPDATE users_tb SET Status = ? WHERE id = ?';
+    const result = await db.query(sql, [Status, id]);
 
-        res.status(200).send({ message: 'Status updated successfully' });
-    });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User status updated successfully' });
+  } catch (err) {
+    console.error('Error updating user status:', err);
+    res.status(500).json({ message: 'Internal server error', error: err.message });
+  }
 };
