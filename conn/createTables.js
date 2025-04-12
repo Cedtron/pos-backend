@@ -237,13 +237,15 @@ const createSubscriptionTable = `
 
 const createDeliveryTable=`
 CREATE TABLE IF NOT EXISTS delivery_tracking (
-    delivery_regno VARCHAR(50) PRIMARY KEY,  
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    RegNo VARCHAR(15) NOT NULL, 
     source_regno VARCHAR(50) NOT NULL,    
     source_type ENUM('POS', 'E-Commerce') NOT NULL,  
     tracking_number VARCHAR(100),        
     status ENUM('Processing', 'Packed', 'Shipped', 'Delivered', 'Failed') DEFAULT 'Processing',
     estimated_delivery DATE,
     actual_delivery DATE,
+    shop_code VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX(source_regno),                    
