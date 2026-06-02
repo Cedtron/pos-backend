@@ -1,12 +1,5 @@
-const mysql = require('mysql');
-
-// Database configuration
-const pool = mysql.createPool({
-  host: 'your_database_host',
-  user: 'your_database_user',
-  password: 'your_database_password',
-  database: 'your_database_name'
-});
+// Use the shared database pool from db.js
+const pool = require('./db');
 
 /**
  * Generates a random tracking number with format: 3 letters + 5 numbers + 3 letters

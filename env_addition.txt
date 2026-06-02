@@ -1,0 +1,5 @@
+# ─── Add this line to your existing .env ─────────────────────────────────────
+# Change the value to a long random string before going to production.
+# Generate one with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+JWT_SECRET=change_this_to_a_long_random_secret_before_production

@@ -2,8 +2,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Define the path to the frontend's public/uploads directory
-const uploadPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'uploads', 'products');
+// Save product images inside the backend's own uploads/products folder
+const uploadPath = path.join(__dirname, '..', 'uploads', 'products');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
